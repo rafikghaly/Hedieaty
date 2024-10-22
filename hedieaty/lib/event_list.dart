@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'event.dart';
+import 'models/event.dart';
+import 'gift_list.dart';
 
 class EventListPage extends StatefulWidget {
   final List<Event> events;
 
-  EventListPage({required this.events});
+  const EventListPage({super.key, required this.events});
 
   @override
   _EventListPageState createState() => _EventListPageState();
@@ -37,7 +38,8 @@ class _EventListPageState extends State<EventListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Event List'),
+        title: const Text('Event List'),
+        backgroundColor: Colors.amber[300],
       ),
       body: Column(
         children: [
@@ -45,8 +47,8 @@ class _EventListPageState extends State<EventListPage> {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                Text('Sort by:'),
-                SizedBox(width: 10),
+                const Text('Sort by:'),
+                const SizedBox(width: 10),
                 DropdownButton<String>(
                   value: _selectedSortOption,
                   onChanged: (String? newValue) {
@@ -76,19 +78,27 @@ class _EventListPageState extends State<EventListPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.edit),
+                        icon: const Icon(Icons.edit),
                         onPressed: () {
                           // Edit event logic
                         },
                       ),
                       IconButton(
-                        icon: Icon(Icons.delete),
+                        icon: const Icon(Icons.delete),
                         onPressed: () {
                           // Delete event logic
                         },
                       ),
                     ],
                   ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GiftListPage(gifts: _events[index].gifts),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -97,7 +107,7 @@ class _EventListPageState extends State<EventListPage> {
             onPressed: () {
               // Add new event logic
             },
-            child: Text('Add New Event'),
+            child: const Text('Add New Event'),
           ),
         ],
       ),

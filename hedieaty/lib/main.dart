@@ -1,24 +1,13 @@
 import 'package:flutter/material.dart';
 import 'event_list.dart';
-import 'event.dart';
+import '../models/event.dart';
+import '../models/friend.dart';
+import '../models/gift.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class Friend {
-  final String name;
-  final String picture;
-  final int upcomingEvents;
-  final List<Event> events;
-
-  Friend({
-    required this.name,
-    required this.picture,
-    required this.upcomingEvents,
-    required this.events,
-  });
-}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -49,7 +38,17 @@ class _HomePageState extends State<HomePage> {
       name: 'Rafik Ghaly',
       picture: 'assets/images/Rafik.jpg',
       upcomingEvents: 1,
-      events: [Event(name: 'Birthday Party', category: 'Birthday', status: 'Upcoming')],
+      events: [
+        Event(
+          name: 'Birthday Party',
+          category: 'Birthday',
+          status: 'Upcoming',
+          gifts: [
+            Gift(name: 'Toy Car', category: 'Toys', status: 'available', isPledged: false, description: 'Awesome car'),
+            Gift(name: 'Harry Potter Paperback Box Set', category: 'Books', status: 'available', isPledged: true, description: 'All 7 books of Harry Potter'),
+          ],
+        ),
+      ],
     ),
     Friend(
       name: 'Youssef Ghaly',
@@ -84,10 +83,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.amber[300],
         shadowColor: Colors.black45,
         elevation: 20,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             bottom: Radius.circular(45),
           ),
@@ -100,7 +99,7 @@ class _HomePageState extends State<HomePage> {
                 'assets/images/Logo.png',
                 height: 40,
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
             ],
           ),
         ),
@@ -114,18 +113,21 @@ class _HomePageState extends State<HomePage> {
                 TextField(
                   controller: searchController,
                   onChanged: _filterFriends,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Search Friends',
                     border: OutlineInputBorder(),
                     suffixIcon: Icon(Icons.search),
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
                     // Navigate to create event/list page
                   },
-                  child: const Text('Create Your Own Event/List'),
+                  child: Text(
+                      'Create Your Own Event/List',
+                  style: TextStyle(color: Colors.brown[400])
+                  ),
                 ),
               ],
             ),
@@ -144,7 +146,8 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           // Add friend manually
         },
-        child: Icon(Icons.add),
+        backgroundColor: Colors.amber[300],
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -153,7 +156,7 @@ class _HomePageState extends State<HomePage> {
 class FriendFrame extends StatelessWidget {
   final Friend friend;
 
-  FriendFrame({required this.friend});
+  const FriendFrame({super.key, required this.friend});
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +166,7 @@ class FriendFrame extends StatelessWidget {
       ),
       title: Text(
         friend.name,
-        style: TextStyle(fontWeight: FontWeight.bold),
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
         friend.upcomingEvents > 0
@@ -173,7 +176,7 @@ class FriendFrame extends StatelessWidget {
       trailing: friend.upcomingEvents > 0
           ? Text(
         friend.upcomingEvents.toString(),
-        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
       )
           : null,
       onTap: () {
