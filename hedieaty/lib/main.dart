@@ -3,11 +3,11 @@ import 'event_list.dart';
 import '../models/event.dart';
 import '../models/friend.dart';
 import '../models/gift.dart';
+import 'profile_page.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -44,8 +44,18 @@ class _HomePageState extends State<HomePage> {
           category: 'Birthday',
           status: 'Upcoming',
           gifts: [
-            Gift(name: 'Toy Car', category: 'Toys', status: 'available', isPledged: false, description: 'Awesome car'),
-            Gift(name: 'Harry Potter Paperback Box Set', category: 'Books', status: 'available', isPledged: true, description: 'All 7 books of Harry Potter'),
+            Gift(
+                name: 'Toy Car',
+                category: 'Toys',
+                status: 'available',
+                isPledged: false,
+                description: 'Awesome car'),
+            Gift(
+                name: 'Harry Potter Paperback Box Set',
+                category: 'Books',
+                status: 'available',
+                isPledged: true,
+                description: 'All 7 books of Harry Potter'),
           ],
         ),
       ],
@@ -86,24 +96,37 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.amber[300],
         shadowColor: Colors.black45,
         elevation: 20,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(45),
+        title: Row(
+        children: [
+          Image.asset(
+            'assets/images/Logo.png',
+            height: 40,
           ),
-        ),
-        title: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/Logo.png',
-                height: 40,
-              ),
-              const SizedBox(width: 10),
-            ],
+        ],
+                ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfilePage(
+                    userName: 'Rafik Ghaly',
+                    email: 'rafikghaly2002@gmail.com',
+                    userEvents: myfriends.first.events,
+                    pledgedGifts: myfriends.first.events.expand((event) => event.gifts).where((gift) => gift.isPledged).toList(),
+                  ),
+                ),
+              );
+            },
           ),
-        ),
+        ],
+        centerTitle: true,
       ),
+
+
+
       body: Column(
         children: [
           Padding(
@@ -124,10 +147,8 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {
                     // Navigate to create event/list page
                   },
-                  child: Text(
-                      'Create Your Own Event/List',
-                  style: TextStyle(color: Colors.brown[400])
-                  ),
+                  child: Text('Create Your Own Event/List',
+                      style: TextStyle(color: Colors.brown[400])),
                 ),
               ],
             ),
@@ -142,12 +163,13 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           // Add friend manually
         },
         backgroundColor: Colors.amber[300],
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.person_add),
+        label: const Text('New Friend'),
       ),
     );
   }
@@ -155,7 +177,6 @@ class _HomePageState extends State<HomePage> {
 
 class FriendFrame extends StatelessWidget {
   final Friend friend;
-
   const FriendFrame({super.key, required this.friend});
 
   @override
@@ -175,9 +196,10 @@ class FriendFrame extends StatelessWidget {
       ),
       trailing: friend.upcomingEvents > 0
           ? Text(
-        friend.upcomingEvents.toString(),
-        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-      )
+              friend.upcomingEvents.toString(),
+              style: const TextStyle(
+                  color: Colors.red, fontWeight: FontWeight.bold),
+            )
           : null,
       onTap: () {
         Navigator.push(

@@ -63,6 +63,7 @@ flutter:
       - assets/images/Rafik.jpg
       - assets/images/Youssef.jpg
       - assets/images/Logo.png
+      - assets/images/DefaultGift.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
