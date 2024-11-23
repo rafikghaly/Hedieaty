@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/sign_in_page.dart';
 import 'event_list.dart';
-import '../models/event.dart';
-import '../models/friend.dart';
-import '../models/gift.dart';
 import 'profile_page.dart';
+import 'home_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,195 +19,61 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: SignInPage(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  List<Friend> myfriends = [
-    Friend(
-      name: 'Rafik Ghaly',
-      picture: 'assets/images/Rafik.jpg',
-      upcomingEvents: 1,
-      events: [
-        Event(
-          name: 'Birthday Party',
-          category: 'Birthday',
-          status: 'Upcoming',
-          gifts: [
-            Gift(
-                name: 'Toy Car',
-                category: 'Toys',
-                status: 'available',
-                isPledged: false,
-                description: 'Awesome car'),
-            Gift(
-                name: 'Harry Potter Paperback Box Set',
-                category: 'Books',
-                status: 'available',
-                isPledged: true,
-                description: 'All 7 books of Harry Potter'),
-          ],
-        ),
-      ],
-    ),
-    Friend(
-      name: 'Youssef Ghaly',
-      picture: 'assets/images/Youssef.jpg',
-      upcomingEvents: 0,
-      events: [],
+class _MainPageState extends State<MainPage> {
+  int _selectedIndex = 0;
+
+  static final List<Widget> _pages = <Widget>[
+    const HomePage(),
+    const EventListPage(events: []),
+    const ProfilePage(
+      userName: 'Rafik Ghaly',
+      email: 'rafikghaly2002@gmail.com',
+      userEvents: [],
+      pledgedGifts: [],
     ),
   ];
 
-  List<Friend> filteredFriends = [];
-  TextEditingController searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    filteredFriends = myfriends;
-  }
-
-  void _filterFriends(String query) {
-    List<Friend> results = [];
-    if (query.isEmpty) {
-      results = myfriends;
-    } else {
-      results = myfriends.where((friend) => friend.name.toLowerCase().contains(query.toLowerCase())).toList();
-    }
+  void _onItemTapped(int index) {
     setState(() {
-      filteredFriends = results;
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.amber[300],
-        shadowColor: Colors.black45,
-        elevation: 20,
-        title: Row(
-        children: [
-          Image.asset(
-            'assets/images/Logo.png',
-            height: 40,
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.event),
+            label: 'Events',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Profile',
           ),
         ],
-                ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.account_circle),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProfilePage(
-                    userName: 'Rafik Ghaly',
-                    email: 'rafikghaly2002@gmail.com',
-                    userEvents: myfriends.first.events,
-                    pledgedGifts: myfriends.first.events.expand((event) => event.gifts).where((gift) => gift.isPledged).toList(),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-        centerTitle: true,
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
       ),
-
-
-
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: searchController,
-                  onChanged: _filterFriends,
-                  decoration: const InputDecoration(
-                    labelText: 'Search Friends',
-                    border: OutlineInputBorder(),
-                    suffixIcon: Icon(Icons.search),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    // Navigate to create event/list page
-                  },
-                  child: Text('Create Your Own Event/List',
-                      style: TextStyle(color: Colors.brown[400])),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: filteredFriends.length,
-              itemBuilder: (context, index) {
-                return FriendFrame(friend: filteredFriends[index]);
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Add friend manually
-        },
-        backgroundColor: Colors.amber[300],
-        icon: const Icon(Icons.person_add),
-        label: const Text('New Friend'),
-      ),
-    );
-  }
-}
-
-class FriendFrame extends StatelessWidget {
-  final Friend friend;
-  const FriendFrame({super.key, required this.friend});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: AssetImage(friend.picture),
-      ),
-      title: Text(
-        friend.name,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text(
-        friend.upcomingEvents > 0
-            ? 'Upcoming Events: ${friend.upcomingEvents}'
-            : 'No Upcoming Events',
-      ),
-      trailing: friend.upcomingEvents > 0
-          ? Text(
-              friend.upcomingEvents.toString(),
-              style: const TextStyle(
-                  color: Colors.red, fontWeight: FontWeight.bold),
-            )
-          : null,
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EventListPage(events: friend.events),
-          ),
-        );
-      },
     );
   }
 }

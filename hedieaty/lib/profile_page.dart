@@ -10,7 +10,8 @@ class ProfilePage extends StatelessWidget {
   final List<Event> userEvents;
   final List<Gift> pledgedGifts;
 
-  const ProfilePage({super.key,
+  const ProfilePage({
+    super.key,
     required this.userName,
     required this.email,
     required this.userEvents,
@@ -27,13 +28,9 @@ class ProfilePage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Stack(
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: AssetImage('assets/images/Rafik.jpg'),
-                ),
-              ],
+            const CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage('assets/images/Rafik.jpg'),
             ),
             const SizedBox(height: 20),
             Text(userName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
@@ -41,7 +38,7 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () {
-                // Go to edit personal information form page
+                // Navigate to edit personal information form page
               },
               icon: const Icon(Icons.edit),
               label: const Text('Edit Personal Information'),
