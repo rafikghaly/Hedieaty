@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event.dart';
 import 'gift_list.dart';
 import '../controllers/event_controller.dart';
 import 'add_event_page.dart';
+import 'edit_event_page.dart'; // Import the EditEventPage
 
 class EventListPage extends StatefulWidget {
   final List<Event> events;
@@ -16,11 +18,13 @@ class EventListPage extends StatefulWidget {
 
 class _EventListPageState extends State<EventListPage> {
   late List<Event> _events;
+  int? _currentUserId;
   String _selectedSortOption = 'Name';
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUserId();
     _events = widget.events;
   }
 
@@ -38,7 +42,8 @@ class _EventListPageState extends State<EventListPage> {
   }
 
   Future<void> _refreshEvents() async {
-    List<Event> updatedEvents = await EventController().events(userId: widget.userId);
+    List<Event> updatedEvents =
+        await EventController().events(userId: widget.userId);
     setState(() {
       _events = updatedEvents;
     });
@@ -58,9 +63,30 @@ class _EventListPageState extends State<EventListPage> {
     );
   }
 
-  void _editEvent(Event event) {
-    // Logic for editing the event
-    // You might want to navigate to a new page for event editing
+  Future<void> _loadCurrentUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentUserId = prefs.getInt('userId');
+    });
+  }
+
+  void _editEvent(Event event) async {
+    bool? edited = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditEventPage(
+          event: event,
+          onEventEdited: (editedEvent) {
+            _refreshEvents(); // Refresh the list after editing the event
+          },
+        ),
+      ),
+    );
+
+    // If the event was edited, refresh the event list
+    if (edited == true) {
+      _refreshEvents();
+    }
   }
 
   Future<void> _deleteEvent(Event event) async {
@@ -81,7 +107,8 @@ class _EventListPageState extends State<EventListPage> {
         shadowColor: Colors.black45,
       ),
       body: RefreshIndicator(
-        onRefresh: _refreshEvents, // Trigger the refresh when the list is pulled down
+        onRefresh:
+            _refreshEvents, // Trigger the refresh when the list is pulled down
         child: Column(
           children: [
             Padding(
@@ -112,54 +139,96 @@ class _EventListPageState extends State<EventListPage> {
               child: _events.isEmpty
                   ? const Center(child: Text('No events available.'))
                   : ListView.builder(
-                itemCount: _events.length,
-                itemBuilder: (context, index) {
-                  final event = _events[index];
-                  final bool isOwner = event.userId == widget.userId; //TODO Check if the event belongs to the user
-                  print(event.userId);
-                  print(widget.userId);
-
-                  return ListTile(
-                    title: Text(event.name),
-                    subtitle: Text(
-                      '${event.category} - ${event.status}',
+                      itemCount: _events.length,
+                      itemBuilder: (context, index) {
+                        final event = _events[index];
+                        final bool isOwner = (event.userId == widget.userId); // TODO Check if the event belongs to the user
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8.0, horizontal: 12.0),
+                          elevation: 4.0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16.0),
+                            leading: Icon(
+                              Icons.event,
+                              size: 40.0,
+                              color: Colors.amber[700],
+                            ),
+                            title: Text(
+                              event.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18.0,
+                                color: Colors.amber[700],
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Category: ${event.category}'),
+                                Text('Status: ${event.status}'),
+                                Text('Date: ${event.date}'),
+                                Text('Location: ${event.location}'),
+                                Text('Description: ${event.description}'),
+                              ],
+                            ),
+                            trailing: isOwner
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () {
+                                          _editEvent(event);
+                                        },
+                                        color: Colors.blue,
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () {
+                                          _deleteEvent(event);
+                                        },
+                                        color: Colors.red,
+                                      ),
+                                    ],
+                                  )
+                                : null,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      GiftListPage(gifts: event.gifts),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
                     ),
-                    trailing: isOwner
-                        ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            _editEvent(event);
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteEvent(event);
-                          },
-                        ),
-                      ],
-                    )
-                        : null,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GiftListPage(gifts: event.gifts),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
                 onPressed: _addNewEvent,
-                child: const Text('Add New Event'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[500],
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text(
+                  'Add New Event',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
               ),
             ),
           ],
