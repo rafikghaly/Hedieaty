@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'models/gift.dart'; // Assuming you have a Gift model
+import '../models/gift.dart'; // Assuming you have a Gift model
 
 class GiftDetailsPage extends StatefulWidget {
   final Gift? gift;

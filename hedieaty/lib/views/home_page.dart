@@ -3,69 +3,54 @@ import '../models/friend.dart';
 import '../models/event.dart';
 import '../models/gift.dart';
 import 'event_list.dart';
+import 'sign_in_page.dart';
+import 'add_event_page.dart'; // Import AddEventPage
+import '../controllers/friend_controller.dart';
+import '../controllers/event_controller.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final List<Friend> friends;
+  final int userId;
+
+  const HomePage({super.key, required this.friends, required this.userId});
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Friend> myfriends = [
-    Friend(
-      name: 'Rafik Ghaly',
-      picture: 'assets/images/Rafik.jpg',
-      upcomingEvents: 1,
-      events: [
-        Event(
-          name: 'Birthday Party',
-          category: 'Birthday',
-          status: 'Upcoming',
-          gifts: [
-            Gift(
-                name: 'Toy Car',
-                category: 'Toys',
-                status: 'available',
-                isPledged: false,
-                description: 'Awesome car'),
-            Gift(
-                name: 'Harry Potter Paperback Box Set',
-                category: 'Books',
-                status: 'available',
-                isPledged: true,
-                description: 'All 7 books of Harry Potter'),
-          ],
-        ),
-      ],
-    ),
-    Friend(
-      name: 'Youssef Ghaly',
-      picture: 'assets/images/Youssef.jpg',
-      upcomingEvents: 0,
-      events: [],
-    ),
-  ];
-
   List<Friend> filteredFriends = [];
   TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    filteredFriends = myfriends;
+    filteredFriends = widget.friends;
   }
 
   void _filterFriends(String query) {
-    List<Friend> results = [];
-    if (query.isEmpty) {
-      results = myfriends;
-    } else {
-      results = myfriends.where((friend) => friend.name.toLowerCase().contains(query.toLowerCase())).toList();
-    }
     setState(() {
-      filteredFriends = results;
+      if (query.isEmpty) {
+        filteredFriends = widget.friends;
+      } else {
+        filteredFriends = widget.friends
+            .where((friend) => friend.name.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
     });
+  }
+
+  void _onEventAdded(Event event) {
+    setState(() {
+      // Optionally, refresh the friend list or just add the new event to the list for immediate feedback
+    });
+  }
+
+  void _logout(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => SignInPage()),
+    );
   }
 
   @override
@@ -75,6 +60,12 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.amber[300],
         shadowColor: Colors.black45,
         elevation: 20,
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context),
+          ),
+        ],
         title: Row(
           children: [
             Image.asset(
@@ -103,19 +94,31 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
-                    // TODO Navigate to create event/list page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddEventPage(
+                        userId: widget.userId,
+                        onEventAdded: _onEventAdded,
+                      )),
+                    ).then((_) {
+                      setState(() {});  // Refresh the page to show the new event
+                    });
                   },
-                  child: Text('Create Your Own Event/List',
-                      style: TextStyle(color: Colors.brown[400])),
+                  child: Text(
+                    'Create Your Own Event/List',
+                    style: TextStyle(color: Colors.brown[400]),
+                  ),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: filteredFriends.isEmpty
+                ? const Center(child: Text('No friends available.'))
+                : ListView.builder(
               itemCount: filteredFriends.length,
               itemBuilder: (context, index) {
-                return FriendFrame(friend: filteredFriends[index]);
+                return FriendFrame(friend: filteredFriends[index], userId: widget.userId);
               },
             ),
           ),
@@ -135,7 +138,8 @@ class _HomePageState extends State<HomePage> {
 
 class FriendFrame extends StatelessWidget {
   final Friend friend;
-  const FriendFrame({super.key, required this.friend});
+  final int userId; // Add userId to be passed to EventListPage
+  const FriendFrame({super.key, required this.friend, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -158,11 +162,12 @@ class FriendFrame extends StatelessWidget {
         style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
       )
           : null,
-      onTap: () {
+      onTap: () async {
+        List<Event> friendEvents = await EventController().events(userId: friend.userId);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => EventListPage(events: friend.events),
+            builder: (context) => EventListPage(events: friendEvents, userId: userId),
           ),
         );
       },

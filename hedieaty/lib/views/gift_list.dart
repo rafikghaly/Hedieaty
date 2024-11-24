@@ -109,7 +109,13 @@ class _GiftListPageState extends State<GiftListPage> {
                 final gift = filteredGifts[index];
                 return ListTile(
                   title: Text(gift.name),
-                  subtitle: Text(gift.category),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(gift.category),
+                      Text('${gift.price.toStringAsFixed(2)} EGP'),
+                    ],
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

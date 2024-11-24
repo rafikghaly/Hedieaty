@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'models/event.dart';
+import '../models/event.dart';
 import 'gift_list.dart';
+import '../controllers/event_controller.dart';
+import 'add_event_page.dart'; // Import AddEventPage
 
 class EventListPage extends StatefulWidget {
   final List<Event> events;
+  final int userId; // Added userId to fetch user-specific events
 
-  const EventListPage({super.key, required this.events});
+  const EventListPage({super.key, required this.events, required this.userId});
 
   @override
   _EventListPageState createState() => _EventListPageState();
@@ -34,12 +37,46 @@ class _EventListPageState extends State<EventListPage> {
     });
   }
 
+  Future<void> _refreshEvents() async {
+    List<Event> updatedEvents = await EventController().events(userId: widget.userId);
+    setState(() {
+      _events = updatedEvents;
+    });
+  }
+
+  void _addNewEvent() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AddEventPage(
+        userId: widget.userId,
+        onEventAdded: (event) {
+          _refreshEvents(); // Refresh the entire list after adding a new event
+        },
+      )),
+    );
+  }
+
+  void _editEvent(Event event) {
+    // Logic for editing the event
+    // You might want to navigate to a new page for event editing
+  }
+
+  void _deleteEvent(Event event) {
+    setState(() {
+      _events.remove(event);
+    });
+    // Logic for deleting the event from the database
+    // After deletion, refresh the list from the database
+    _refreshEvents();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Event List'),
         backgroundColor: Colors.amber[300],
+        shadowColor: Colors.black45,
       ),
       body: Column(
         children: [
@@ -68,25 +105,29 @@ class _EventListPageState extends State<EventListPage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: _events.isEmpty
+                ? const Center(child: Text('No events available.'))
+                : ListView.builder(
               itemCount: _events.length,
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(_events[index].name),
-                  subtitle: Text('${_events[index].category} - ${_events[index].status}'),
+                  subtitle: Text(
+                    '${_events[index].category} - ${_events[index].status}',
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () {
-                          // Edit event logic
+                          _editEvent(_events[index]);
                         },
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
-                          // Delete event logic
+                          _deleteEvent(_events[index]);
                         },
                       ),
                     ],
@@ -103,11 +144,12 @@ class _EventListPageState extends State<EventListPage> {
               },
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              // Add new event logic
-            },
-            child: const Text('Add New Event'),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: _addNewEvent,
+              child: const Text('Add New Event'),
+            ),
           ),
         ],
       ),

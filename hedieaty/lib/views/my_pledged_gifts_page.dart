@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/gift.dart';
+import '../../models/gift.dart';
 
 class MyPledgedGiftsPage extends StatelessWidget {
   final List<Gift> pledgedGifts;

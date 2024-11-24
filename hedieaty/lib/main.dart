@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:hedieaty/sign_in_page.dart';
-import 'event_list.dart';
-import 'profile_page.dart';
-import 'home_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'views/sign_in_page.dart';
+import 'views/home_page.dart';
+import 'views/profile_page.dart';
+import 'views/event_list.dart';
+import 'controllers/friend_controller.dart';
+import 'controllers/event_controller.dart';
+import 'models/friend.dart';
+import 'models/event.dart';
+import 'init_database.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DatabaseInitializer().database; // Ensure the database is initialized
   runApp(const MyApp());
 }
 
@@ -33,17 +41,27 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
+  Future<List<Friend>>? _friends;
+  Future<List<Event>>? _events;
+  int? _userId;
 
-  static final List<Widget> _pages = <Widget>[
-    const HomePage(),
-    const EventListPage(events: []),
-    const ProfilePage(
-      userName: 'Rafik Ghaly',
-      email: 'rafikghaly2002@gmail.com',
-      userEvents: [],
-      pledgedGifts: [],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+  }
+
+  void _loadUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+    if (userId != null) {
+      setState(() {
+        _userId = userId;
+        _friends = FriendController().friends();
+        _events = EventController().events(userId: userId);
+      });
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -54,7 +72,51 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          _userId == null
+              ? const Center(child: CircularProgressIndicator())
+              : FutureBuilder<List<Friend>>(
+            future: _friends,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (snapshot.hasData) {
+                List<Friend> friends = snapshot.data!;
+                return HomePage(friends: friends, userId: _userId!);
+              } else {
+                return const Center(child: Text('No friends available.'));
+              }
+            },
+          ),
+          _userId == null
+              ? const Center(child: CircularProgressIndicator())
+              : FutureBuilder<List<Event>>(
+            future: _events,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (snapshot.hasData) {
+                List<Event> events = snapshot.data!;
+                return EventListPage(events: events, userId: _userId!);
+              } else {
+                return const Center(child: Text('No events available.'));
+              }
+            },
+          ),
+          const ProfilePage(
+            userName: 'Rafik Ghaly',
+            email: 'rafikghaly2002@gmail.com',
+            userEvents: [],
+            pledgedGifts: [],
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(

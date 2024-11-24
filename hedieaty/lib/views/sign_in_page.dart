@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../controllers/user_controller.dart';
+import '../models/user.dart';
 import 'sign_up_page.dart';
+import '../main.dart';
 
 class SignInPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -8,12 +11,19 @@ class SignInPage extends StatelessWidget {
 
   SignInPage({super.key});
 
-  void _signIn(BuildContext context) {
+  void _storeUserId(int userId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('userId', userId);
+  }
+
+  void _signIn(BuildContext context) async {
     final email = emailController.text;
     final password = passwordController.text;
 
-    // TODO authentication logic with FireBase
-    if (email == 'rafy' && password == 'rafy') {
+    User? user = await UserController().authenticateUser(email, password);
+
+    if (user != null) {
+      _storeUserId(user.id!); // Store the user ID
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainPage()),
@@ -77,9 +87,9 @@ class SignInPage extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    backgroundColor: Colors.amber[500]
+                    backgroundColor: Colors.amber[500],
                   ),
-                  child: const Text('Sign In', style: TextStyle(fontSize: 18,color: Colors.white)),
+                  child: const Text('Sign In', style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
                 const SizedBox(height: 10),
                 TextButton(
