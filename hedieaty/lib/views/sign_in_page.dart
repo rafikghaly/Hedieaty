@@ -11,9 +11,10 @@ class SignInPage extends StatelessWidget {
 
   SignInPage({super.key});
 
-  void _storeUserId(int userId) async {
+  Future<void> _saveUserLogin(int userId, String userName) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId);
+    await prefs.setString('userName', userName);
   }
 
   void _signIn(BuildContext context) async {
@@ -23,7 +24,7 @@ class SignInPage extends StatelessWidget {
     User? user = await UserController().authenticateUser(email, password);
 
     if (user != null) {
-      _storeUserId(user.id!); // Store the user ID
+      await _saveUserLogin(user.id!, user.name); // Save user ID and name
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainPage()),

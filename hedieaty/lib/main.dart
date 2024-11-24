@@ -12,7 +12,7 @@ import 'init_database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseInitializer().database; // Ensure the database is initialized
+  await DatabaseInitializer().database;
   runApp(const MyApp());
 }
 
@@ -57,8 +57,12 @@ class _MainPageState extends State<MainPage> {
     if (userId != null) {
       setState(() {
         _userId = userId;
-        _friends = FriendController().friends();
+        _friends = FriendController().friends(userId);
         _events = EventController().events(userId: userId);
+      });
+    } else {
+      setState(() {
+        _userId = -1; // Set to -1 to indicate no user is logged in
       });
     }
   }
@@ -77,38 +81,51 @@ class _MainPageState extends State<MainPage> {
         children: [
           _userId == null
               ? const Center(child: CircularProgressIndicator())
-              : FutureBuilder<List<Friend>>(
-            future: _friends,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (snapshot.hasData) {
-                List<Friend> friends = snapshot.data!;
-                return HomePage(friends: friends, userId: _userId!);
-              } else {
-                return const Center(child: Text('No friends available.'));
-              }
-            },
-          ),
+              : _userId == -1
+                  ? SignInPage()
+                  : FutureBuilder<List<Friend>>(
+                      future: _friends,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${snapshot.error}'));
+                        } else if (snapshot.hasData) {
+                          List<Friend> friends = snapshot.data!;
+                          return HomePage(friends: friends, userId: _userId!);
+                        } else {
+                          return const Center(
+                              child: Text('No friends available.'));
+                        }
+                      },
+                    ),
           _userId == null
               ? const Center(child: CircularProgressIndicator())
-              : FutureBuilder<List<Event>>(
-            future: _events,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (snapshot.hasData) {
-                List<Event> events = snapshot.data!;
-                return EventListPage(events: events, userId: _userId!);
-              } else {
-                return const Center(child: Text('No events available.'));
-              }
-            },
-          ),
+              : _userId == -1
+                  ? SignInPage()
+                  : FutureBuilder<List<Event>>(
+                      future: _events,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${snapshot.error}'));
+                        } else if (snapshot.hasData) {
+                          List<Event> events = snapshot.data!;
+                          return EventListPage(
+                              events: events, userId: _userId!);
+                        } else {
+                          return const Center(
+                              child: Text('No events available.'));
+                        }
+                      },
+                    ),
           const ProfilePage(
             userName: 'Rafik Ghaly',
             email: 'rafikghaly2002@gmail.com',
@@ -125,7 +142,7 @@ class _MainPageState extends State<MainPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.event),
-            label: 'Events',
+            label: 'My Events',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),

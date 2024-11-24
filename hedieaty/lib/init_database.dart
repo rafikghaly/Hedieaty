@@ -24,10 +24,11 @@ class DatabaseInitializer {
           'CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, preferences TEXT, password TEXT)',
         );
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS friends(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, picture TEXT, upcomingEvents INTEGER)',
+          'CREATE TABLE IF NOT EXISTS friends(id INTEGER PRIMARY KEY AUTOINCREMENT, userId1 INTEGER, userId2 INTEGER, name TEXT, picture TEXT, upcomingEvents INTEGER)',
         );
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, status TEXT, date TEXT, location TEXT, description TEXT, userId INTEGER)',        );
+          'CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, status TEXT, date TEXT, location TEXT, description TEXT, userId INTEGER)',
+        );
         await db.execute(
           'CREATE TABLE IF NOT EXISTS gifts(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, category TEXT, price REAL, status TEXT, isPledged INTEGER, imageUrl TEXT, eventId INTEGER)',
         );

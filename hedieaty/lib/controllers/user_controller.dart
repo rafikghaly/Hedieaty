@@ -22,55 +22,44 @@ class UserController {
     );
   }
 
-  Future<List<User>> users() async {
+  Future<User?> getUserByEmail(String email) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('users');
-
-    return List.generate(maps.length, (i) {
-      return User(
-        id: maps[i]['id'],
-        name: maps[i]['name'],
-        email: maps[i]['email'],
-        preferences: maps[i]['preferences'],
-        password: maps[i]['password'],
-      );
-    });
-  }
-
-  String _hashPassword(String password) {
-    var bytes = utf8.encode(password);
-    var digest = sha256.convert(bytes);
-    return digest.toString();
-  }
-
-  Future<void> registerUser(User user) async {
-    final hashedPassword = _hashPassword(user.password);
-    User userWithHashedPassword = User(
-      id: null,
-      name: user.name,
-      email: user.email,
-      preferences: user.preferences,
-      password: hashedPassword,
-    );
-    await insertUser(userWithHashedPassword);
-  }
-
-  Future<User?> authenticateUser(String email, String password) async {
-    final db = await database;
-    final hashedPassword = _hashPassword(password);
     final List<Map<String, dynamic>> maps = await db.query(
       'users',
-      where: 'email = ? AND password = ?',
-      whereArgs: [email, hashedPassword],
+      where: 'email = ?',
+      whereArgs: [email],
     );
 
     if (maps.isNotEmpty) {
+      final map = maps.first;
       return User(
-        id: maps[0]['id'],
-        name: maps[0]['name'],
-        email: maps[0]['email'],
-        preferences: maps[0]['preferences'],
-        password: maps[0]['password'],
+        id: map['id'],
+        name: map['name'],
+        email: map['email'],
+        preferences: map['preferences'],
+        password: map['password'],
+      );
+    } else {
+      return null;
+    }
+  }
+
+  Future<User?> getUserById(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      final map = maps.first;
+      return User(
+        id: map['id'],
+        name: map['name'],
+        email: map['email'],
+        preferences: map['preferences'],
+        password: map['password'],
       );
     } else {
       return null;
@@ -94,5 +83,46 @@ class UserController {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  String _hashPassword(String password) {
+    var bytes = utf8.encode(password);
+    var digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  Future<void> registerUser(User user) async {
+    final hashedPassword = _hashPassword(user.password);
+    User userWithHashedPassword = User(
+      id: null, // Ensure id is null to let the DB handle auto-increment
+      name: user.name,
+      email: user.email,
+      preferences: user.preferences,
+      password: hashedPassword,
+    );
+    await insertUser(userWithHashedPassword);
+  }
+
+  Future<User?> authenticateUser(String email, String password) async {
+    final db = await database;
+    final hashedPassword = _hashPassword(password);
+    final List<Map<String, dynamic>> maps = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, hashedPassword],
+    );
+
+    if (maps.isNotEmpty) {
+      final map = maps.first;
+      return User(
+        id: map['id'],
+        name: map['name'],
+        email: map['email'],
+        preferences: map['preferences'],
+        password: map['password'],
+      );
+    } else {
+      return null;
+    }
   }
 }
