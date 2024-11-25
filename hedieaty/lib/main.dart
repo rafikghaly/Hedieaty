@@ -44,19 +44,26 @@ class _MainPageState extends State<MainPage> {
   Future<List<Friend>>? _friends;
   Future<List<Event>>? _events;
   int? _userId;
+  String? _userName;
+  String? _email;
 
   @override
   void initState() {
     super.initState();
-    _loadUserId();
+    _loadUserData();
   }
 
-  void _loadUserId() async {
+  Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
+    String? userName = prefs.getString('userName');
+    String? email = prefs.getString('email');
+
     if (userId != null) {
       setState(() {
         _userId = userId;
+        _userName = userName;
+        _email = email;
         _friends = FriendController().friends(userId);
         _events = EventController().events(userId: userId);
       });
@@ -82,55 +89,50 @@ class _MainPageState extends State<MainPage> {
           _userId == null
               ? const Center(child: CircularProgressIndicator())
               : _userId == -1
-                  ? SignInPage()
-                  : FutureBuilder<List<Friend>>(
-                      future: _friends,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return Center(
-                              child: Text('Error: ${snapshot.error}'));
-                        } else if (snapshot.hasData) {
-                          List<Friend> friends = snapshot.data!;
-                          return HomePage(friends: friends, userId: _userId!);
-                        } else {
-                          return const Center(
-                              child: Text('No friends available.'));
-                        }
-                      },
-                    ),
+              ? SignInPage()
+              : FutureBuilder<List<Friend>>(
+            future: _friends,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (snapshot.hasData) {
+                List<Friend> friends = snapshot.data!;
+                return HomePage(friends: friends, userId: _userId!);
+              } else {
+                return const Center(child: Text('No friends available.'));
+              }
+            },
+          ),
           _userId == null
               ? const Center(child: CircularProgressIndicator())
               : _userId == -1
-                  ? SignInPage()
-                  : FutureBuilder<List<Event>>(
-                      future: _events,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return Center(
-                              child: Text('Error: ${snapshot.error}'));
-                        } else if (snapshot.hasData) {
-                          List<Event> events = snapshot.data!;
-                          return EventListPage(
-                              events: events, userId: _userId!);
-                        } else {
-                          return const Center(
-                              child: Text('No events available.'));
-                        }
-                      },
-                    ),
-          const ProfilePage(
-            userName: 'Rafik Ghaly',
-            email: 'rafikghaly2002@gmail.com',
-            userEvents: [],
-            pledgedGifts: [],
+              ? SignInPage()
+              : FutureBuilder<List<Event>>(
+            future: _events,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (snapshot.hasData) {
+                List<Event> events = snapshot.data!;
+                return EventListPage(
+                  events: events,
+                  userId: _userId!,
+                  isOwner: true,
+                );
+              } else {
+                return const Center(child: Text('No events available.'));
+              }
+            },
+          ),
+          ProfilePage(
+            userName: _userName ?? '',
+            email: _email ?? '',
+            userEvents: const [],
+            pledgedGifts: const [],
           ),
         ],
       ),

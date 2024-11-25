@@ -70,9 +70,8 @@ class UserController {
     final db = await database;
     await db.update(
       'users',
-      user.toMap(),
-      where: 'id = ?',
-      whereArgs: [user.id],
+      {'name': user.name, 'email': user.email},
+      where: 'id = ?', whereArgs: [user.id],
     );
   }
 

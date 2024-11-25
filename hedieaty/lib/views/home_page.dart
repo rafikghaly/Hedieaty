@@ -247,7 +247,7 @@ class FriendFrame extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => EventListPage(events: friendEvents, userId: friendUserId),
+                builder: (context) => EventListPage(events: friendEvents, userId: friendUserId,isOwner: false,),
               ),
             );
           },

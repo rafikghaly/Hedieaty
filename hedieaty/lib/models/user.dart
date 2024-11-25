@@ -3,10 +3,10 @@ class User {
   final String name;
   final String email;
   final String preferences;
-  final String password;
+  String password;
 
   User({
-    this.id, // Optional id
+    this.id,
     required this.name,
     required this.email,
     required this.preferences,

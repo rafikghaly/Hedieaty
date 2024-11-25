@@ -9,8 +9,13 @@ import 'edit_event_page.dart'; // Import the EditEventPage
 class EventListPage extends StatefulWidget {
   final List<Event> events;
   final int userId;
+  final bool isOwner;
 
-  const EventListPage({super.key, required this.events, required this.userId});
+  const EventListPage(
+      {super.key,
+      required this.events,
+      required this.userId,
+      required this.isOwner});
 
   @override
   _EventListPageState createState() => _EventListPageState();
@@ -18,13 +23,11 @@ class EventListPage extends StatefulWidget {
 
 class _EventListPageState extends State<EventListPage> {
   late List<Event> _events;
-  int? _currentUserId;
   String _selectedSortOption = 'Name';
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentUserId();
     _events = widget.events;
   }
 
@@ -61,13 +64,6 @@ class _EventListPageState extends State<EventListPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _loadCurrentUserId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _currentUserId = prefs.getInt('userId');
-    });
   }
 
   void _editEvent(Event event) async {
@@ -142,7 +138,6 @@ class _EventListPageState extends State<EventListPage> {
                       itemCount: _events.length,
                       itemBuilder: (context, index) {
                         final event = _events[index];
-                        final bool isOwner = (event.userId == widget.userId); // TODO Check if the event belongs to the user
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               vertical: 8.0, horizontal: 12.0),
@@ -155,14 +150,14 @@ class _EventListPageState extends State<EventListPage> {
                             leading: Icon(
                               Icons.event,
                               size: 40.0,
-                              color: Colors.amber[700],
+                              color: Colors.amber[500],
                             ),
                             title: Text(
                               event.name,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18.0,
-                                color: Colors.amber[700],
+                                color: Colors.amber[500],
                               ),
                             ),
                             subtitle: Column(
@@ -175,7 +170,7 @@ class _EventListPageState extends State<EventListPage> {
                                 Text('Description: ${event.description}'),
                               ],
                             ),
-                            trailing: isOwner
+                            trailing: widget.isOwner
                                 ? Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -200,8 +195,9 @@ class _EventListPageState extends State<EventListPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      GiftListPage(gifts: event.gifts),
+                                  builder: (context) => GiftListPage(
+                                      eventId: event.id!,
+                                      userId: widget.userId,isOwner: widget.isOwner,),
                                 ),
                               );
                             },
@@ -210,27 +206,29 @@ class _EventListPageState extends State<EventListPage> {
                       },
                     ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                onPressed: _addNewEvent,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber[500],
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+            if (widget.isOwner) ...[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  onPressed: _addNewEvent,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber[500],
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 50, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'Add New Event',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                 ),
-                child: const Text(
-                  'Add New Event',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

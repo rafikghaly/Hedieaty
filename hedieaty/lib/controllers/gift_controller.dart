@@ -20,23 +20,32 @@ class GiftController {
     );
   }
 
-  Future<List<Gift>> gifts() async {
+  Future<List<Gift>> gifts(int eventId) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('gifts');
+    final List<Map<String, dynamic>> giftMaps = await db.query(
+      'gifts',
+      where: 'eventId = ?',
+      whereArgs: [eventId],
+    );
 
-    return List.generate(maps.length, (i) {
-      return Gift(
-        id: maps[i]['id'],
-        name: maps[i]['name'],
-        description: maps[i]['description'],
-        category: maps[i]['category'],
-        price: maps[i]['price'],
-        status: maps[i]['status'],
-        isPledged: maps[i]['isPledged'] == 1,
-        imageUrl: maps[i]['imageUrl'],
-        eventId: maps[i]['eventId'],
-      );
+    return List.generate(giftMaps.length, (i) {
+      return Gift.fromMap(giftMaps[i]);
     });
+  }
+
+  Future<Gift?> getGiftById(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'gifts',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return Gift.fromMap(maps.first);
+    } else {
+      return null;
+    }
   }
 
   Future<void> updateGift(Gift gift) async {
