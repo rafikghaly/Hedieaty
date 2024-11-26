@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import '../models/event.dart';
 import '../init_database.dart';
+import 'gift_controller.dart';
 
 class EventController {
   static final EventController _instance = EventController._internal();
@@ -14,12 +15,38 @@ class EventController {
   Future<void> insertEvent(Event event) async {
     final db = await database;
     final eventMap = event.toMap();
-    eventMap.remove('id'); // Remove id to let the database handle auto-increment
+    eventMap.remove('id');
     await db.insert(
       'events',
       eventMap,
       conflictAlgorithm: ConflictAlgorithm.fail,
     );
+  }
+
+  Future<Event?> getEventById(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'events',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) {
+      final map = maps.first;
+      return Event(
+        id: map['id'],
+        name: map['name'],
+        category: map['category'],
+        date: map['date'],
+        status: map['status'],
+        location: map['location'],
+        description: map['description'],
+        userId: map['userId'],
+        gifts: await GiftController().gifts(map['id']),
+      );
+
+    } else {
+      return null;
+    }
   }
 
   Future<List<Event>> events({required int userId}) async {

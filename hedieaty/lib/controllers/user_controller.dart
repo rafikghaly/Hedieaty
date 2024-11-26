@@ -71,7 +71,8 @@ class UserController {
     await db.update(
       'users',
       {'name': user.name, 'email': user.email},
-      where: 'id = ?', whereArgs: [user.id],
+      where: 'id = ?',
+      whereArgs: [user.id],
     );
   }
 
@@ -123,5 +124,15 @@ class UserController {
     } else {
       return null;
     }
+  }
+
+  Future<bool> emailExists(String email, int userId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> result = await db.query(
+      'users',
+      where: 'email = ? AND id != ?',
+      whereArgs: [email, userId],
+    );
+    return result.isNotEmpty;
   }
 }

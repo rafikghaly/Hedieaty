@@ -33,6 +33,19 @@ class PledgedGiftController {
     });
   }
 
+  Future<List<PledgedGift>> getPledgedGiftsForEvent(int eventId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'pledged_gifts',
+      where: 'eventId = ?',
+      whereArgs: [eventId],
+    );
+
+    return List.generate(maps.length, (i) {
+      return PledgedGift.fromMap(maps[i]);
+    });
+  }
+
   Future<void> deletePledgedGift(int id) async {
     final db = await database;
     await db.delete(

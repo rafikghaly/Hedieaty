@@ -76,6 +76,14 @@ class _HomePageState extends State<HomePage> {
     User? newUser = await userController.getUserByEmail(email);
 
     if (newUser != null) {
+      // Check if the user is trying to add themselves as a friend
+      if (newUser.id == widget.userId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You cannot add yourself as a friend')),
+        );
+        return;
+      }
+
       await friendController.addMutualFriends(widget.userId, newUser.id!, currentUserName, newUser.name);
 
       // Refresh the friend list

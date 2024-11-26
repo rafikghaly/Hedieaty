@@ -17,6 +17,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
   late String? _email;
   late String? _preferences;
   late String? _password;
+  final UserController _userController = UserController();
 
   @override
   void initState() {
@@ -24,13 +25,57 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
     _userName = widget.user.name;
     _email = widget.user.email;
     _preferences = widget.user.preferences;
-    _password = null; // Initialize as null
+    _password = null;
   }
 
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
+      if (_userName == widget.user.name && _email == widget.user.email) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('No Changes'),
+              content: const Text('No changes were made. Please update your information if you want to make changes.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+        return;
+      }
+
+      if (_email != widget.user.email) {
+        bool emailExists = await _userController.emailExists(_email ?? '', widget.user.id!);
+
+        if (emailExists) {
+          // Alert if the email already exists
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Email Exists'),
+                content: const Text('The email you entered is already in use. Please use a different email.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+          return;
+        }
+      }
+
+      // Update user information if the name or email is different
       final updatedUser = User(
         id: widget.user.id,
         name: _userName ?? widget.user.name,
@@ -39,7 +84,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         password: _password ?? widget.user.password, // Use existing password if none entered
       );
 
-      await UserController().updateUser(updatedUser);
+      await _userController.updateUser(updatedUser);
 
       Navigator.pop(context, updatedUser);
     }
@@ -59,14 +104,14 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
             children: [
               TextFormField(
                 initialValue: _userName,
-                decoration: const InputDecoration(labelText: 'Name (optional)'),
+                decoration: const InputDecoration(labelText: 'Name'),
                 onSaved: (value) {
                   _userName = value!.isEmpty ? null : value;
                 },
               ),
               TextFormField(
                 initialValue: _email,
-                decoration: const InputDecoration(labelText: 'Email (optional)'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 onSaved: (value) {
                   _email = value!.isEmpty ? null : value;
                 },

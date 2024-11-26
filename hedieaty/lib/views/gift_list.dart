@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/gift.dart';
+import '../models/event.dart';
+import '../models/pledged_gift.dart';
+import '../models/user.dart';
 import '../controllers/pledged_gift_controller.dart';
 import '../controllers/gift_controller.dart';
-import '../models/pledged_gift.dart';
+import '../controllers/user_controller.dart';
+import '../controllers/event_controller.dart';
 import 'add_gift_page.dart';
 import 'edit_gift_page.dart';
 
@@ -26,14 +31,35 @@ class GiftListPage extends StatefulWidget {
 
 class _GiftListPageState extends State<GiftListPage> {
   late List<Gift> _gifts = [];
+  late Map<int, String> _pledgedUserNames = {};
+  Event? _event;
+  User? _user;
+  late String _userName;
+  late String _email;
+  int? _userId;
 
   @override
   void initState() {
     super.initState();
-    _fetchGifts();
+    _fetchEventUserAndGifts();
+    _loadUserData();
   }
 
-  Future<void> _fetchGifts() async {
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userId = prefs.getInt('userId');
+      _userName = prefs.getString('userName') ?? '';
+      _email = prefs.getString('email') ?? '';
+    });
+  }
+
+  Future<void> _fetchEventUserAndGifts() async {
+    //Get the events and User details
+    _event = await EventController().getEventById(widget.eventId);
+    _user = await UserController().getUserById(widget.userId);
+
+    // Get the gifts associated with the event
     if (widget.showPledgedGifts) {
       final pledgedGifts = await PledgedGiftController().getPledgedGiftsForUser(widget.userId);
       _gifts = [];
@@ -46,6 +72,21 @@ class _GiftListPageState extends State<GiftListPage> {
     } else {
       _gifts = await GiftController().gifts(widget.eventId);
     }
+
+    // Get names of users who pledged each gift
+    for (var gift in _gifts) {
+      if (gift.isPledged) {
+        final pledgedGifts = await PledgedGiftController().getPledgedGiftsForEvent(widget.eventId);
+        final pledgedGift = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
+        if (pledgedGift != null) {
+          final pledgedUser = await UserController().getUserById(pledgedGift.userId);
+          if (pledgedUser != null) {
+            _pledgedUserNames[gift.id!] = pledgedUser.name;
+          }
+        }
+      }
+    }
+
     setState(() {});
   }
 
@@ -56,8 +97,11 @@ class _GiftListPageState extends State<GiftListPage> {
     });
 
     final pledgedGift = PledgedGift(
-      userId: widget.userId,
+      eventId: widget.eventId,
+      userId: _userId!,
       giftId: gift.id!,
+      friendName: _user?.name ?? 'Unknown',
+      dueDate: _event?.date ?? 'Unknown',
     );
 
     if (gift.isPledged) {
@@ -69,10 +113,12 @@ class _GiftListPageState extends State<GiftListPage> {
     }
 
     await GiftController().updateGift(gift);
+    await _refreshGifts();
   }
 
   Future<void> _refreshGifts() async {
-    await _fetchGifts();
+    await _fetchEventUserAndGifts();
+    setState(() {});
   }
 
   @override
@@ -90,6 +136,8 @@ class _GiftListPageState extends State<GiftListPage> {
           itemCount: _gifts.length,
           itemBuilder: (context, index) {
             final gift = _gifts[index];
+            final pledgedUserName = _pledgedUserNames[gift.id] ?? '';
+
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
               elevation: 4.0,
@@ -118,12 +166,13 @@ class _GiftListPageState extends State<GiftListPage> {
                     Text('Status: ${gift.status}'),
                     Text('Description: ${gift.description}'),
                     Text('Price: \$${gift.price.toStringAsFixed(2)}'),
+                    if (gift.isPledged) Text('Pledged by: $pledgedUserName'),
                   ],
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!gift.isPledged)
+                    if (!widget.isOwner && !gift.isPledged)
                       ElevatedButton(
                         onPressed: () => _pledgeGift(gift),
                         child: const Text('Pledge'),

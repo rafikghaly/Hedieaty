@@ -33,7 +33,7 @@ class DatabaseInitializer {
           'CREATE TABLE IF NOT EXISTS gifts(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, category TEXT, price REAL, status TEXT, isPledged INTEGER, imageUrl TEXT, eventId INTEGER)',
         );
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS pledged_gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, giftId INTEGER, FOREIGN KEY (userId) REFERENCES users(id), FOREIGN KEY (giftId) REFERENCES gifts(id))',
+          'CREATE TABLE IF NOT EXISTS pledged_gifts(id INTEGER PRIMARY KEY AUTOINCREMENT, eventId INTEGER, userId INTEGER, giftId INTEGER, friendName TEXT, dueDate TEXT, FOREIGN KEY(eventId) REFERENCES events(id), FOREIGN KEY(userId) REFERENCES users(id), FOREIGN KEY(giftId) REFERENCES gifts(id))',
         );
       },
     );
