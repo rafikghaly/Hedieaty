@@ -152,4 +152,13 @@ class UserController {
     );
     return result.isNotEmpty;
   }
+
+  // New method to fetch all users
+  Future<List<User>> users() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('users');
+    return List.generate(maps.length, (i) {
+      return User.fromMap(maps[i]);
+    });
+  }
 }

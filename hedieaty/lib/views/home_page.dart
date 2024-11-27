@@ -5,11 +5,11 @@ import '../models/event.dart';
 import '../models/user.dart';
 import 'event_list.dart';
 import 'sign_in_page.dart';
+import 'add_event_page.dart';
 import '../controllers/friend_controller.dart';
 import '../controllers/user_controller.dart';
 import '../controllers/event_controller.dart';
 
-// TODO Fix Search Functionality
 class HomePage extends StatefulWidget {
   final List<Friend> friends;
   final int userId;
@@ -24,13 +24,13 @@ class _HomePageState extends State<HomePage> {
   List<Friend> filteredFriends = [];
   List<Event> userEvents = [];
   TextEditingController searchController = TextEditingController();
-  String currentUserName = ''; // Initialize with an empty string
+  String currentUserName = ''; // Initialize with an empty string (for late errors)
 
   @override
   void initState() {
     super.initState();
-    _fetchUserName(); // Load the user name
-    _fetchFriends(); // Fetch all friends for the logged-in user
+    _fetchUserName();
+    _fetchFriends();
     _fetchUserEvents();
   }
 
@@ -58,16 +58,21 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _filterFriends(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _fetchFriends(); // Refresh the friends list
-      } else {
-        filteredFriends = filteredFriends
-            .where((friend) => friend.name.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
-    });
+  void _filterFriends(String query) async {
+    if (query.isEmpty) {
+      await _fetchFriends();
+    } else {
+      List<Friend> friends = await FriendController().friends(widget.userId);
+      List<User> users = await UserController().users();
+      setState(() {
+        filteredFriends = friends.where((friend) {
+          User? friendUser = users.firstWhere(
+                (user) => user.id == (friend.userId1 == widget.userId ? friend.userId2 : friend.userId1),
+          );
+          return (friendUser.name.toLowerCase().contains(query.toLowerCase()) || friendUser.email.toLowerCase().contains(query.toLowerCase()));
+        }).toList();
+      });
+    }
   }
 
   Future<void> _addFriendByEmail(String email) async {

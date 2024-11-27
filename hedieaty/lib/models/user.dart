@@ -13,6 +13,16 @@ class User {
     required this.password,
   });
 
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'],
+      name: map['name'],
+      email: map['email'],
+      preferences: map['preferences'],
+      password: map['password'],
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
