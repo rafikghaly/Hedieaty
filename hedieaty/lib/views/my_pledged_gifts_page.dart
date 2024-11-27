@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/gift.dart';
-import '../models/pledged_gift.dart';
 import '../controllers/pledged_gift_controller.dart';
 import '../controllers/gift_controller.dart';
 

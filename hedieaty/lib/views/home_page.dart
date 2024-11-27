@@ -5,7 +5,6 @@ import '../models/event.dart';
 import '../models/user.dart';
 import 'event_list.dart';
 import 'sign_in_page.dart';
-import 'add_event_page.dart';
 import '../controllers/friend_controller.dart';
 import '../controllers/user_controller.dart';
 import '../controllers/event_controller.dart';

@@ -78,13 +78,11 @@ class _GiftListPageState extends State<GiftListPage> {
       if (gift.isPledged) {
         final pledgedGifts = await PledgedGiftController().getPledgedGiftsForEvent(widget.eventId);
         final pledgedGift = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
-        if (pledgedGift != null) {
-          final pledgedUser = await UserController().getUserById(pledgedGift.userId);
-          if (pledgedUser != null) {
-            _pledgedUserNames[gift.id!] = pledgedUser.name;
-          }
+        final pledgedUser = await UserController().getUserById(pledgedGift.userId);
+        if (pledgedUser != null) {
+          _pledgedUserNames[gift.id!] = pledgedUser.name;
         }
-      }
+            }
     }
 
     setState(() {});

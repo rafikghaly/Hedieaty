@@ -28,7 +28,7 @@ class Gift {
       'name': name,
       'description': description,
       'category': category,
-      'status': status, // Now mutable
+      'status': status,
       'isPledged': isPledged ? 1 : 0,
       'imageUrl': imageUrl,
       'price': price,

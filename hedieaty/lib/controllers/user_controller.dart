@@ -111,7 +111,7 @@ class UserController {
   Future<void> registerUser(User user) async {
     final hashedPassword = _hashPassword(user.password);
     User userWithHashedPassword = User(
-      id: null, // Ensure id is null to let the DB handle auto-increment
+      id: null, // Ensure id is null to let the DB handle the auto-increment
       name: user.name,
       email: user.email,
       preferences: user.preferences,

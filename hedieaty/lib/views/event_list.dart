@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event.dart';
 import 'gift_list.dart';
 import '../controllers/event_controller.dart';
 import 'add_event_page.dart';
-import 'edit_event_page.dart'; // Import the EditEventPage
+import 'edit_event_page.dart';
 
 class EventListPage extends StatefulWidget {
   final List<Event> events;

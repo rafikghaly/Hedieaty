@@ -66,7 +66,7 @@ class EventController {
         location: maps[i]['location'],
         description: maps[i]['description'],
         userId: maps[i]['userId'],
-        gifts: [], // TODO Retrieve gifts separately based on eventId in the next phase
+        gifts: [], // Retrieving gifts separately based on eventId
       );
     });
   }
@@ -89,8 +89,7 @@ class EventController {
       ''' UPDATE pledged_gifts SET dueDate = ? WHERE eventId = ? ''',
       [newDate, eventId],
     );
-    print(
-        'Updated $updatedCount pledged gifts with new due date for eventId: $eventId');
+    //print('Updated $updatedCount pledged gifts with new due date for eventId: $eventId');
   }
 
   Future<void> updatePledgedGiftsWithEventOwner(
@@ -100,8 +99,7 @@ class EventController {
       ''' UPDATE pledged_gifts SET friendName = ? WHERE eventId = ? ''',
       [newName, eventId],
     );
-    print(
-        'Updated $updatedCount pledged gifts with new friend name for eventId: $eventId');
+    //print('Updated $updatedCount pledged gifts with new friend name for eventId: $eventId');
   }
 
   Future<void> deleteEvent(int id) async {

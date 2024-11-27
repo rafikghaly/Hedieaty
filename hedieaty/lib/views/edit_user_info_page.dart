@@ -81,7 +81,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         name: _userName ?? widget.user.name,
         email: _email ?? widget.user.email,
         preferences: _preferences ?? widget.user.preferences,
-        password: _password ?? widget.user.password, // Use existing password if none entered
+        password: _password ?? widget.user.password,
       );
 
       await _userController.updateUser(updatedUser);
