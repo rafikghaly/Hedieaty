@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../models/user.dart';
 import '../init_database.dart';
+import 'event_controller.dart';
 
 class UserController {
   static final UserController _instance = UserController._internal();
@@ -74,6 +75,22 @@ class UserController {
       where: 'id = ?',
       whereArgs: [user.id],
     );
+    await _updatePledgedGiftsWithNewUserName(user.id!, user.name);
+  }
+
+  Future<void> _updatePledgedGiftsWithNewUserName(
+      int userId, String newName) async {
+    final db = await database; // Find all events created by this user
+    final List<Map<String, dynamic>> eventMaps = await db.query(
+      'events',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+    for (var eventMap in eventMaps) {
+      int eventId = eventMap['id'];
+      await EventController()
+          .updatePledgedGiftsWithEventOwner(eventId, newName);
+    }
   }
 
   Future<void> deleteUser(int id) async {

@@ -33,6 +33,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    _userName = '';
+    _email = '';
     _loadUserData();
   }
 
@@ -50,8 +52,8 @@ class _ProfilePageState extends State<ProfilePage> {
       id: _userId!,
       name: _userName,
       email: _email,
-      preferences: 'Default Preferences', // Placeholder, won't be used
-      password: '******', // Placeholder, won't be used
+      preferences: 'Default Preferences',
+      password: '******',
     );
 
     final result = await Navigator.push(

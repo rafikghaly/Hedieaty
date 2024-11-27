@@ -43,7 +43,6 @@ class EventController {
         userId: map['userId'],
         gifts: await GiftController().gifts(map['id']),
       );
-
     } else {
       return null;
     }
@@ -80,6 +79,29 @@ class EventController {
       where: 'id = ?',
       whereArgs: [event.id],
     );
+    await _updatePledgedGiftsWithNewEventDate(event.id!, event.date);
+  }
+
+  Future<void> _updatePledgedGiftsWithNewEventDate(
+      int eventId, String newDate) async {
+    final db = await database;
+    int updatedCount = await db.rawUpdate(
+      ''' UPDATE pledged_gifts SET dueDate = ? WHERE eventId = ? ''',
+      [newDate, eventId],
+    );
+    print(
+        'Updated $updatedCount pledged gifts with new due date for eventId: $eventId');
+  }
+
+  Future<void> updatePledgedGiftsWithEventOwner(
+      int eventId, String newName) async {
+    final db = await database;
+    int updatedCount = await db.rawUpdate(
+      ''' UPDATE pledged_gifts SET friendName = ? WHERE eventId = ? ''',
+      [newName, eventId],
+    );
+    print(
+        'Updated $updatedCount pledged gifts with new friend name for eventId: $eventId');
   }
 
   Future<void> deleteEvent(int id) async {
