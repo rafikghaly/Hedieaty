@@ -21,19 +21,62 @@ class DatabaseInitializer {
       version: 1,
       onCreate: (db, version) async {
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, preferences TEXT, password TEXT)',
+          'CREATE TABLE IF NOT EXISTS users('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'firebase_uid TEXT UNIQUE, '
+          'name TEXT, '
+          'email TEXT, '
+          'preferences TEXT, '
+          'password TEXT'
+          ')',
         );
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS friends(id INTEGER PRIMARY KEY AUTOINCREMENT, userId1 INTEGER, userId2 INTEGER, name TEXT, picture TEXT, upcomingEvents INTEGER)',
+          'CREATE TABLE IF NOT EXISTS friends('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'userId1 INTEGER, '
+          'userId2 INTEGER, '
+          'name TEXT, '
+          'picture TEXT, '
+          'upcomingEvents INTEGER'
+          ')',
         );
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, status TEXT, date TEXT, location TEXT, description TEXT, userId INTEGER)',
+          'CREATE TABLE IF NOT EXISTS events('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'name TEXT, '
+          'category TEXT, '
+          'status TEXT, '
+          'date TEXT, '
+          'location TEXT, '
+          'description TEXT, '
+          'userId INTEGER'
+          ')',
         );
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS gifts(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, category TEXT, price REAL, status TEXT, isPledged INTEGER, imageUrl TEXT, eventId INTEGER)',
+          'CREATE TABLE IF NOT EXISTS gifts('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'name TEXT, '
+          'description TEXT, '
+          'category TEXT, '
+          'price REAL, '
+          'status TEXT, '
+          'isPledged INTEGER, '
+          'imageUrl TEXT, '
+          'eventId INTEGER'
+          ')',
         );
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS pledged_gifts(id INTEGER PRIMARY KEY AUTOINCREMENT, eventId INTEGER, userId INTEGER, giftId INTEGER, friendName TEXT, dueDate TEXT, FOREIGN KEY(eventId) REFERENCES events(id), FOREIGN KEY(userId) REFERENCES users(id), FOREIGN KEY(giftId) REFERENCES gifts(id))',
+          'CREATE TABLE IF NOT EXISTS pledged_gifts('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'eventId INTEGER, '
+          'userId INTEGER, '
+          'giftId INTEGER, '
+          'friendName TEXT, '
+          'dueDate TEXT, '
+          'FOREIGN KEY(eventId) REFERENCES events(id), '
+          'FOREIGN KEY(userId) REFERENCES users(id), '
+          'FOREIGN KEY(giftId) REFERENCES gifts(id)'
+          ')',
         );
       },
     );

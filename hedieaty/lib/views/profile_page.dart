@@ -28,7 +28,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late String _userName;
   late String _email;
-  int? _userId;
+  String? _firebaseUid;
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _userId = prefs.getInt('userId');
+      _firebaseUid = prefs.getString('firebaseUid');
       _userName = prefs.getString('userName') ?? '';
       _email = prefs.getString('email') ?? '';
     });
@@ -49,7 +49,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _editUserInfo() async {
     final user = User(
-      id: _userId!,
+      id: _firebaseUid!.hashCode,
+      firebaseUid: _firebaseUid!,
       name: _userName,
       email: _email,
       preferences: 'Default Preferences',
@@ -68,14 +69,14 @@ class _ProfilePageState extends State<ProfilePage> {
         _userName = result.name;
         _email = result.email;
         // Save the updated information to SharedPreferences
-        _saveUserData(result.id!, result.name, result.email);
+        _saveUserData(result.firebaseUid, result.name, result.email);
       });
     }
   }
 
-  Future<void> _saveUserData(int userId, String userName, String email) async {
+  Future<void> _saveUserData(String firebaseUid, String userName, String email) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('userId', userId);
+    await prefs.setString('firebaseUid', firebaseUid);
     await prefs.setString('userName', userName);
     await prefs.setString('email', email);
   }
@@ -109,7 +110,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MyPledgedGiftsPage(userId: _userId!,),
+                    builder: (context) => MyPledgedGiftsPage(userId: _firebaseUid!.hashCode),
                   ),
                 );
               },

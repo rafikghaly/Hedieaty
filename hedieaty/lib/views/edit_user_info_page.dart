@@ -52,7 +52,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
       }
 
       if (_email != widget.user.email) {
-        bool emailExists = await _userController.emailExists(_email ?? '', widget.user.id!);
+        bool emailExists = await _userController.emailExists(_email ?? '', widget.user.firebaseUid.hashCode);
 
         if (emailExists) {
           // Alert if the email already exists
@@ -78,6 +78,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
       // Update user information if the name or email is different
       final updatedUser = User(
         id: widget.user.id,
+        firebaseUid: widget.user.firebaseUid,
         name: _userName ?? widget.user.name,
         email: _email ?? widget.user.email,
         preferences: _preferences ?? widget.user.preferences,

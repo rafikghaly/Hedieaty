@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // Alias Firebase User
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../controllers/user_controller.dart';
-import '../models/user.dart';
 import 'sign_in_page.dart';
 
 class SignUpPage extends StatelessWidget {
@@ -30,22 +29,17 @@ class SignUpPage extends StatelessWidget {
     }
 
     try {
-      // Register user with Firebase Authentication
-      firebase_auth.UserCredential userCredential = await firebase_auth.FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      // Check if email already exists
+      List<String> signInMethods = await firebase_auth.FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      if (signInMethods.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('The email address is already in use by another account. Please use a different email or sign in.')),
+        );
+        return;
+      }
 
-      // Save user details locally
-      User newUser = User(
-        id: userCredential.user?.uid.hashCode, // Using Firebase UID for local ID
-        name: name,
-        email: email,
-        preferences: preferences,
-        password: password,
-      );
-
-      await UserController().registerUser(newUser);
+      // Save user details locally through UserController
+      await UserController().registerUser(email, password, name, preferences);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign up successful! Please sign in.')),
@@ -56,8 +50,8 @@ class SignUpPage extends StatelessWidget {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        //SnackBar(content: Text('Sign up failed, Make sure you are connected to the Network: $e')),
-        const SnackBar(content: Text('Sign up failed, Make sure you are connected to the Network')),
+        const SnackBar(content: Text('Sign up failed. Check your fields\n'
+            'Make sure you are connected to the network.')),
       );
     }
   }
