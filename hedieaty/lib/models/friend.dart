@@ -19,6 +19,18 @@ class Friend {
     required this.events,
   });
 
+  factory Friend.fromMap(Map<String, dynamic> map) {
+    return Friend(
+      id: map['id'],
+      userId1: map['userId1'],
+      userId2: map['userId2'],
+      name: map['name'],
+      picture: map['picture'],
+      upcomingEvents: map['upcomingEvents'],
+      events: [], // events will be populated separately
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

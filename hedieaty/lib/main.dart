@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'views/sign_in_page.dart';
 import 'views/home_page.dart';
@@ -12,6 +13,7 @@ import 'init_database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   await DatabaseInitializer().database;
   runApp(const MyApp());
 }

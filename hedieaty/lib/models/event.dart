@@ -22,6 +22,20 @@ class Event {
     required this.userId,
     required this.gifts,
   });
+  
+  factory Event.fromMap(Map<String, dynamic> map) {
+    return Event(
+      id: map['id'],
+      name: map['name'],
+      category: map['category'],
+      status: map['status'],
+      date: map['date'],
+      location: map['location'],
+      description: map['description'],
+      userId: map['userId'],
+      gifts: [], // gifts will be populated separately
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {

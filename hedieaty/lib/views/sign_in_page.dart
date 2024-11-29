@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:connectivity_plus/connectivity_plus.dart'; // For checking internet connectivity
 import '../controllers/user_controller.dart';
 import '../models/user.dart';
 import 'sign_up_page.dart';
@@ -18,22 +20,77 @@ class SignInPage extends StatelessWidget {
     await prefs.setString('email', email);
   }
 
-  void _signIn(BuildContext context) async {
+  Future<void> _signIn(BuildContext context) async {
     final email = emailController.text;
     final password = passwordController.text;
 
-    User? user = await UserController().authenticateUser(email, password);
-
-    if (user != null) {
-      await _saveUserLogin(user.id!, user.name, user.email); // Save user ID and name
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainPage()),
-      );
+    // Check network connectivity
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult[0] == ConnectivityResult.none) {
+      // Device is offline, use local authentication
+      // print("Offline");
+      User? user = await UserController().authenticateUser(email, password);
+      if (user != null) {
+        await _saveUserLogin(user.id!, user.name, user.email); // Save user ID and name
+        // Show offline login message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Logged in offline. Limited functionality available.')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid email or password. Note: Email might not be registered offline.')),
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid email or password')),
-      );
+      // Device is online, use Firebase Authentication
+      // print("Online");
+      try {
+        firebase_auth.UserCredential userCredential = await firebase_auth.FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        User? user = await UserController().authenticateUser(email, password);
+        if (user != null) {
+          await _saveUserLogin(user.id!, user.name, user.email); // Save user ID and name
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainPage()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid email or password.')),
+          );
+        }
+      } catch (e) {
+        // Handle network error appropriately by falling back to local authentication
+        if (e.toString().contains('network error')) {
+          User? user = await UserController().authenticateUser(email, password);
+          if (user != null) {
+            await _saveUserLogin(user.id!, user.name, user.email); // Save user ID and name
+            // Show offline login message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Logged in offline due to network error. Limited functionality available.')),
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MainPage()),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Invalid email or password. Note: Email might not be registered offline.')),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign in failed: $e')),
+          );
+        }
+      }
     }
   }
 

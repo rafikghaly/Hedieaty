@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // Alias Firebase User
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../controllers/user_controller.dart';
 import '../models/user.dart';
 import 'sign_in_page.dart';
@@ -11,29 +13,53 @@ class SignUpPage extends StatelessWidget {
 
   SignUpPage({super.key});
 
-  void _signUp(BuildContext context) async {
+  Future<void> _signUp(BuildContext context) async {
     final name = nameController.text;
     final email = emailController.text;
     final password = passwordController.text;
     final preferences = preferencesController.text;
 
-    User newUser = User(
-      id: 0, // Auto-incremented ID in DB
-      name: name,
-      email: email,
-      preferences: preferences,
-      password: password,
-    );
+    // Check network connectivity
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      // Device is offline, show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network connection required to sign up.')),
+      );
+      return; // Exit the method
+    }
 
-    await UserController().registerUser(newUser);
+    try {
+      // Register user with Firebase Authentication
+      firebase_auth.UserCredential userCredential = await firebase_auth.FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sign up successful! Please sign in.')),
-    );
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => SignInPage()),
-    );
+      // Save user details locally
+      User newUser = User(
+        id: userCredential.user?.uid.hashCode, // Using Firebase UID for local ID
+        name: name,
+        email: email,
+        preferences: preferences,
+        password: password,
+      );
+
+      await UserController().registerUser(newUser);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign up successful! Please sign in.')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => SignInPage()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        //SnackBar(content: Text('Sign up failed, Make sure you are connected to the Network: $e')),
+        const SnackBar(content: Text('Sign up failed, Make sure you are connected to the Network')),
+      );
+    }
   }
 
   @override
