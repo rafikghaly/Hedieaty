@@ -5,15 +5,14 @@ import '../models/event.dart';
 import '../models/user.dart';
 import 'event_list.dart';
 import 'sign_in_page.dart';
-import '../controllers/friend_controller.dart';
-import '../controllers/user_controller.dart';
-import '../controllers/event_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 
 class HomePage extends StatefulWidget {
   final List<Friend> friends;
   final int userId;
+  final int firebaseId;
 
-  const HomePage({super.key, required this.friends, required this.userId});
+  const HomePage({super.key, required this.friends, required this.userId, required this.firebaseId});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -24,6 +23,8 @@ class _HomePageState extends State<HomePage> {
   List<Event> userEvents = [];
   TextEditingController searchController = TextEditingController();
   String currentUserName = ''; // Initialize with an empty string (for late errors)
+
+  final Repository _repository = Repository();
 
   @override
   void initState() {
@@ -44,14 +45,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchFriends() async {
-    List<Friend> friends = await FriendController().friends(widget.userId);
+    List<Friend> friends = await _repository.getFriends(widget.firebaseId);
     setState(() {
       filteredFriends = friends;
     });
   }
 
   void _fetchUserEvents() async {
-    List<Event> events = await EventController().events(userId: widget.userId);
+    List<Event> events = await _repository.getEvents(userId: widget.firebaseId);
     setState(() {
       userEvents = events;
     });
@@ -61,12 +62,12 @@ class _HomePageState extends State<HomePage> {
     if (query.isEmpty) {
       await _fetchFriends();
     } else {
-      List<Friend> friends = await FriendController().friends(widget.userId);
-      List<User> users = await UserController().users();
+      List<Friend> friends = await _repository.getFriends(widget.firebaseId);
+      List<User> users = await _repository.getUsers();
       setState(() {
         filteredFriends = friends.where((friend) {
           User? friendUser = users.firstWhere(
-                (user) => user.id == (friend.userId1 == widget.userId ? friend.userId2 : friend.userId1),
+                (user) => user.id == (friend.userId1 == widget.firebaseId ? friend.userId2 : friend.userId1),
           );
           return (friendUser.name.toLowerCase().contains(query.toLowerCase()) || friendUser.email.toLowerCase().contains(query.toLowerCase()));
         }).toList();
@@ -75,20 +76,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _addFriendByEmail(String email) async {
-    UserController userController = UserController();
-    FriendController friendController = FriendController();
-    User? newUser = await userController.getUserByEmail(email);
+    User? newUser = await _repository.getUserByEmail(email);
 
     if (newUser != null) {
       // Check if the user is trying to add themselves as a friend
-      if (newUser.id == widget.userId) {
+      if (newUser.id == widget.firebaseId) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('You cannot add yourself as a friend')),
         );
         return;
       }
 
-      await friendController.addMutualFriends(widget.userId, newUser.id!, currentUserName, newUser.name);
+      await _repository.addMutualFriends(widget.firebaseId, newUser.id!, currentUserName, newUser.name);
 
       // Refresh the friend list
       _fetchFriends();
@@ -192,7 +191,7 @@ class _HomePageState extends State<HomePage> {
                 itemBuilder: (context, index) {
                   return FriendFrame(
                     friend: filteredFriends[index],
-                    userId: widget.userId,
+                    userId: widget.firebaseId,
                   );
                 },
               ),
@@ -214,11 +213,12 @@ class FriendFrame extends StatelessWidget {
   final Friend friend;
   final int userId;
 
-  const FriendFrame({super.key, required this.friend, required this.userId});
+  FriendFrame({super.key, required this.friend, required this.userId});
+
+  final Repository _repository = Repository();
 
   Future<String> _fetchFriendName(int friendUserId) async {
-    UserController userController = UserController();
-    User? friendUser = await userController.getUserById(friendUserId);
+    User? friendUser = await _repository.getUserById(friendUserId);
     return friendUser?.name ?? 'Unknown';
   }
 
@@ -255,11 +255,11 @@ class FriendFrame extends StatelessWidget {
               : null,
           onTap: () async {
             // Fetch friend's events using their userId
-            List<Event> friendEvents = await EventController().events(userId: friendUserId);
+            List<Event> friendEvents = await _repository.getEvents(userId: friendUserId);
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => EventListPage(events: friendEvents, userId: friendUserId,isOwner: false,),
+                builder: (context) => EventListPage(events: friendEvents, userId: friendUserId, isOwner: false, firebaseId:friendUserId,),
               ),
             );
           },

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/friend.dart';
 import '../models/event.dart';
@@ -13,11 +14,12 @@ class FriendController {
     return await DatabaseInitializer().database;
   }
 
-  Future<void> insertFriend(Friend friend) async {
+  Future<void> insertFriendLocal(Friend friend) async {
     final db = await database;
     await db.insert(
       'friends',
       {
+        'userId1': friend.userId1,
         'userId1': friend.userId1,
         'userId2': friend.userId2,
         'name': friend.name,
@@ -28,7 +30,11 @@ class FriendController {
     );
   }
 
-  Future<bool> _friendshipExists(int userId1, int userId2) async {
+  Future<void> insertFriendFirestore(Friend friend) async {
+    await FirebaseFirestore.instance.collection('friends').add(friend.toMap());
+  }
+
+  Future<bool> _friendshipExistsLocal(int userId1, int userId2) async {
     final db = await database;
     final List<Map<String, dynamic>> friendMaps = await db.query(
       'friends',
@@ -39,27 +45,49 @@ class FriendController {
     return friendMaps.isNotEmpty;
   }
 
-  Future<void> addMutualFriends(int userId1, int userId2, String userName1, String userName2) async {
-    // Check if the friendship already exists
-    if (await _friendshipExists(userId1, userId2)) {
-      // print('Friendship already exists between $userId1 and $userId2');
+  Future<bool> _friendshipExistsFirestore(int userId1, int userId2) async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('friends').where('userId1', isEqualTo: userId1).where('userId2', isEqualTo: userId2).get();
+    if (querySnapshot.docs.isNotEmpty) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> addMutualFriendsLocal(int userId1, int userId2, String userName1, String userName2) async {
+    if (await _friendshipExistsLocal(userId1, userId2)) {
       return;
     }
 
-    // Add a single entry for the friendship
     Friend friend = Friend(
-      id: null, // Set to null to let the DB handle auto-increment
+      id: null,
       userId1: userId1,
       userId2: userId2,
       name: userName2,
-      picture: 'assets/images/default.jpg', // Assume a default picture
+      picture: 'assets/images/default.jpg',
       upcomingEvents: 0,
       events: [],
     );
-    await insertFriend(friend);
+    await insertFriendLocal(friend);
   }
 
-  Future<List<Friend>> friends(int userId) async {
+  Future<void> addMutualFriendsFirestore(int userId1, int userId2, String userName1, String userName2) async {
+    if (await _friendshipExistsFirestore(userId1, userId2)) {
+      return;
+    }
+
+    Friend friend = Friend(
+      id: null,
+      userId1: userId1,
+      userId2: userId2,
+      name: userName2,
+      picture: 'assets/images/default.jpg',
+      upcomingEvents: 0,
+      events: [],
+    );
+    await insertFriendFirestore(friend);
+  }
+
+  Future<List<Friend>> friendsLocal(int userId) async {
     final db = await database;
     final List<Map<String, dynamic>> friendMaps = await db.query(
       'friends',
@@ -71,7 +99,7 @@ class FriendController {
 
     for (var friendMap in friendMaps) {
       int friendUserId = friendMap['userId1'] == userId ? friendMap['userId2'] : friendMap['userId1'];
-      List<Event> friendEvents = await EventController().events(userId: friendUserId);
+      List<Event> friendEvents = await EventController().eventsLocal(userId: friendUserId);
 
       Friend friend = Friend(
         id: friendMap['id'] as int,
@@ -89,7 +117,57 @@ class FriendController {
     return friends;
   }
 
-  Future<void> updateFriend(Friend friend) async {
+  Future<List<Friend>> friendsFirestore(int userId) async {
+    // Query for both userId1 and userId2
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('friends')
+        .where('userId1', isEqualTo: userId)
+        .get();
+
+    var querySnapshot2 = await FirebaseFirestore.instance
+        .collection('friends')
+        .where('userId2', isEqualTo: userId)
+        .get();
+
+    List<Friend> friends = [];
+
+    // Process the results where the userId is userId1
+    for (var doc in querySnapshot.docs) {
+      var data = doc.data();
+      int friendUserId = data['userId1'] == userId ? data['userId2'] : data['userId1'];
+      List<Event> friendEvents = await EventController().eventsFirestore(userId: friendUserId);
+      friends.add(Friend(
+        id: doc.id.hashCode,
+        userId1: data['userId1'],
+        userId2: data['userId2'],
+        name: data['name'],
+        picture: data['picture'],
+        upcomingEvents: friendEvents.length,
+        events: friendEvents,
+      ));
+    }
+
+    // Process the results where the userId is userId2
+    for (var doc in querySnapshot2.docs) {
+      var data = doc.data();
+      int friendUserId = data['userId1'] == userId ? data['userId2'] : data['userId1'];
+      List<Event> friendEvents = await EventController().eventsFirestore(userId: friendUserId);
+      friends.add(Friend(
+        id: doc.id.hashCode,
+        userId1: data['userId1'],
+        userId2: data['userId2'],
+        name: data['name'],
+        picture: data['picture'],
+        upcomingEvents: friendEvents.length,
+        events: friendEvents,
+      ));
+    }
+
+    return friends;
+  }
+
+
+  Future<void> updateFriendLocal(Friend friend) async {
     final db = await database;
     await db.update(
       'friends',
@@ -99,12 +177,20 @@ class FriendController {
     );
   }
 
-  Future<void> deleteFriend(int id) async {
+  Future<void> updateFriendFirestore(Friend friend) async {
+    await FirebaseFirestore.instance.collection('friends').doc(friend.id.toString()).update(friend.toMap());
+  }
+
+  Future<void> deleteFriendLocal(int id) async {
     final db = await database;
     await db.delete(
       'friends',
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<void> deleteFriendFirestore(int id) async {
+    await FirebaseFirestore.instance.collection('friends').doc(id.toString()).delete();
   }
 }

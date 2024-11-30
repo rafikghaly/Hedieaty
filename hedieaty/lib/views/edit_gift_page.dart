@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/gift.dart';
-import '../controllers/gift_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 
 class EditGiftPage extends StatefulWidget {
   final Gift gift;
@@ -18,6 +18,8 @@ class _EditGiftPageState extends State<EditGiftPage> {
   late String _category;
   late double _price;
   late String? _imageUrl;
+
+  final Repository _repository = Repository();
 
   @override
   void initState() {
@@ -45,7 +47,7 @@ class _EditGiftPageState extends State<EditGiftPage> {
         price: _price,
       );
 
-      await GiftController().updateGift(updatedGift);
+      await _repository.updateGift(updatedGift);
 
       Navigator.pop(context);
     }

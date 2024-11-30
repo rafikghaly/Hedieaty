@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/gift.dart';
-import '../controllers/gift_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 
 class AddGiftPage extends StatefulWidget {
   final int eventId;
@@ -20,6 +20,8 @@ class _AddGiftPageState extends State<AddGiftPage> {
   double _price = 0.0;
   String? _imageUrl;
 
+  final Repository _repository = Repository();
+
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
@@ -36,7 +38,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
         eventId: widget.eventId,
       );
 
-      await GiftController().insertGift(newGift);
+      await _repository.insertGift(newGift);
 
       Navigator.pop(context);
     }

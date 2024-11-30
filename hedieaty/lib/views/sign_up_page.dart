@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // Alias Firebase User
 import 'package:connectivity_plus/connectivity_plus.dart';
-import '../controllers/user_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 import 'sign_in_page.dart';
 
 class SignUpPage extends StatelessWidget {
@@ -9,6 +9,8 @@ class SignUpPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController preferencesController = TextEditingController();
+
+  final Repository _repository = Repository();
 
   SignUpPage({super.key});
 
@@ -20,7 +22,7 @@ class SignUpPage extends StatelessWidget {
 
     // Check network connectivity
     var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
+    if (connectivityResult[0] == ConnectivityResult.none) {
       // Device is offline, show error message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network connection required to sign up.')),
@@ -38,8 +40,8 @@ class SignUpPage extends StatelessWidget {
         return;
       }
 
-      // Save user details locally through UserController
-      await UserController().registerUser(email, password, name, preferences);
+      // Save user details using the repository
+      await _repository.registerUser(email, password, name, preferences);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign up successful! Please sign in.')),

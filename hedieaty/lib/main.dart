@@ -5,11 +5,10 @@ import 'views/sign_in_page.dart';
 import 'views/home_page.dart';
 import 'views/profile_page.dart';
 import 'views/event_list.dart';
-import 'controllers/friend_controller.dart';
-import 'controllers/event_controller.dart';
 import 'models/friend.dart';
 import 'models/event.dart';
 import 'init_database.dart';
+import 'controllers/repository.dart'; // Import the repository
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,8 +45,11 @@ class _MainPageState extends State<MainPage> {
   Future<List<Friend>>? _friends;
   Future<List<Event>>? _events;
   int? _userId;
+  int? _firebaseId;
   String? _userName;
   String? _email;
+
+  final Repository _repository = Repository();
 
   @override
   void initState() {
@@ -58,6 +60,7 @@ class _MainPageState extends State<MainPage> {
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
+    int? firebaseId = prefs.getInt('firebaseId');
     String? userName = prefs.getString('userName');
     String? email = prefs.getString('email');
 
@@ -66,8 +69,9 @@ class _MainPageState extends State<MainPage> {
         _userId = userId;
         _userName = userName;
         _email = email;
-        _friends = FriendController().friends(userId);
-        _events = EventController().events(userId: userId);
+        _friends = _repository.getFriends(firebaseId!);
+        _events = _repository.getEvents(userId: firebaseId);
+        _firebaseId = firebaseId;
       });
     } else {
       setState(() {
@@ -101,7 +105,7 @@ class _MainPageState extends State<MainPage> {
                 return Center(child: Text('Error: ${snapshot.error}'));
               } else if (snapshot.hasData) {
                 List<Friend> friends = snapshot.data!;
-                return HomePage(friends: friends, userId: _userId!);
+                return HomePage(friends: friends, userId: _userId!, firebaseId: _firebaseId!,);
               } else {
                 return const Center(child: Text('No friends available.'));
               }
@@ -123,7 +127,7 @@ class _MainPageState extends State<MainPage> {
                 return EventListPage(
                   events: events,
                   userId: _userId!,
-                  isOwner: true,
+                  isOwner: true, firebaseId: _firebaseId!,
                 );
               } else {
                 return const Center(child: Text('No events available.'));

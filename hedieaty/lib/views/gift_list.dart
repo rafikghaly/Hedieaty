@@ -4,10 +4,7 @@ import '../models/gift.dart';
 import '../models/event.dart';
 import '../models/pledged_gift.dart';
 import '../models/user.dart';
-import '../controllers/pledged_gift_controller.dart';
-import '../controllers/gift_controller.dart';
-import '../controllers/user_controller.dart';
-import '../controllers/event_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 import 'add_gift_page.dart';
 import 'edit_gift_page.dart';
 
@@ -38,6 +35,8 @@ class _GiftListPageState extends State<GiftListPage> {
   late String _email;
   int? _userId;
 
+  final Repository _repository = Repository();
+
   @override
   void initState() {
     super.initState();
@@ -56,33 +55,33 @@ class _GiftListPageState extends State<GiftListPage> {
 
   Future<void> _fetchEventUserAndGifts() async {
     //Get the events and User details
-    _event = await EventController().getEventById(widget.eventId);
-    _user = await UserController().getUserById(widget.userId);
+    _event = await _repository.getEventById(widget.eventId);
+    _user = await _repository.getUserById(widget.userId);
 
     // Get the gifts associated with the event
     if (widget.showPledgedGifts) {
-      final pledgedGifts = await PledgedGiftController().getPledgedGiftsForUser(widget.userId);
+      final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
       _gifts = [];
       for (var pledgedGift in pledgedGifts) {
-        final gift = await GiftController().getGiftById(pledgedGift.giftId);
+        final gift = await _repository.getGiftById(pledgedGift.giftId);
         if (gift != null) {
           _gifts.add(gift);
         }
       }
     } else {
-      _gifts = await GiftController().gifts(widget.eventId);
+      _gifts = await _repository.getGifts(widget.eventId);
     }
 
     // Get names of users who pledged each gift
     for (var gift in _gifts) {
       if (gift.isPledged) {
-        final pledgedGifts = await PledgedGiftController().getPledgedGiftsForEvent(widget.eventId);
+        final pledgedGifts = await _repository.getPledgedGiftsForEvent(widget.eventId);
         final pledgedGift = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
-        final pledgedUser = await UserController().getUserById(pledgedGift.userId);
+        final pledgedUser = await _repository.getUserById(pledgedGift.userId);
         if (pledgedUser != null) {
           _pledgedUserNames[gift.id!] = pledgedUser.name;
         }
-            }
+      }
     }
 
     setState(() {});
@@ -103,14 +102,14 @@ class _GiftListPageState extends State<GiftListPage> {
     );
 
     if (gift.isPledged) {
-      await PledgedGiftController().insertPledgedGift(pledgedGift);
+      await _repository.insertPledgedGift(pledgedGift);
     } else {
-      final pledgedGifts = await PledgedGiftController().getPledgedGiftsForUser(widget.userId);
+      final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
       final giftToDelete = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
-      await PledgedGiftController().deletePledgedGift(giftToDelete.id!);
+      await _repository.deletePledgedGift(giftToDelete.id!);
     }
 
-    await GiftController().updateGift(gift);
+    await _repository.updateGift(gift);
     await _refreshGifts();
   }
 

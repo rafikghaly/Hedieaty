@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
 import 'gift_list.dart';
-import '../controllers/event_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 import 'add_event_page.dart';
 import 'edit_event_page.dart';
 
 class EventListPage extends StatefulWidget {
   final List<Event> events;
   final int userId;
+  final int firebaseId;
   final bool isOwner;
 
   const EventListPage(
       {super.key,
       required this.events,
       required this.userId,
-      required this.isOwner});
+      required this.isOwner, required this.firebaseId});
 
   @override
   _EventListPageState createState() => _EventListPageState();
@@ -23,6 +24,8 @@ class EventListPage extends StatefulWidget {
 class _EventListPageState extends State<EventListPage> {
   late List<Event> _events;
   String _selectedSortOption = 'Name';
+
+  final Repository _repository = Repository();
 
   @override
   void initState() {
@@ -44,8 +47,7 @@ class _EventListPageState extends State<EventListPage> {
   }
 
   Future<void> _refreshEvents() async {
-    List<Event> updatedEvents =
-        await EventController().events(userId: widget.userId);
+    List<Event> updatedEvents = await _repository.getEvents(userId: widget.firebaseId);
     setState(() {
       _events = updatedEvents;
     });
@@ -57,6 +59,7 @@ class _EventListPageState extends State<EventListPage> {
       MaterialPageRoute(
         builder: (context) => AddEventPage(
           userId: widget.userId,
+          firebaseId: widget.firebaseId,
           onEventAdded: (event) {
             _refreshEvents(); // Refresh the entire list after adding a new event
           },
@@ -85,7 +88,7 @@ class _EventListPageState extends State<EventListPage> {
   }
 
   Future<void> _deleteEvent(Event event) async {
-    await EventController().deleteEvent(event.id!);
+    await _repository.deleteEvent(event.id!);
     setState(() {
       _events.remove(event);
     });
@@ -102,8 +105,7 @@ class _EventListPageState extends State<EventListPage> {
         shadowColor: Colors.black45,
       ),
       body: RefreshIndicator(
-        onRefresh:
-            _refreshEvents, // Trigger the refresh when the list is pulled down
+        onRefresh: _refreshEvents, // Trigger the refresh when the list is pulled down
         child: Column(
           children: [
             Padding(

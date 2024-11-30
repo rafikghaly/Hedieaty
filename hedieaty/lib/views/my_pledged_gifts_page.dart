@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/gift.dart';
-import '../controllers/pledged_gift_controller.dart';
-import '../controllers/gift_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 
 class MyPledgedGiftsPage extends StatefulWidget {
   final int userId;
@@ -18,6 +17,8 @@ class MyPledgedGiftsPage extends StatefulWidget {
 class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
   late List<Map<String, dynamic>> _pledgedGiftsWithDetails = [];
 
+  final Repository _repository = Repository();
+
   @override
   void initState() {
     super.initState();
@@ -25,11 +26,11 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
   }
 
   Future<void> _fetchPledgedGifts() async {
-    final pledgedGifts = await PledgedGiftController().getPledgedGiftsForUser(widget.userId);
+    final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
     _pledgedGiftsWithDetails = [];
 
     for (var pledgedGift in pledgedGifts) {
-      final gift = await GiftController().getGiftById(pledgedGift.giftId);
+      final gift = await _repository.getGiftById(pledgedGift.giftId);
       if (gift != null && pledgedGift.userId == widget.userId) {
         // Ensure the gift is not the user's own gift
         _pledgedGiftsWithDetails.add({

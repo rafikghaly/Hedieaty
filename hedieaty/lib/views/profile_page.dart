@@ -6,6 +6,7 @@ import '../models/user.dart';
 import 'my_pledged_gifts_page.dart';
 import 'gift_list.dart';
 import 'edit_user_info_page.dart';
+import 'package:hedieaty/controllers/repository.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userName;
@@ -29,6 +30,8 @@ class _ProfilePageState extends State<ProfilePage> {
   late String _userName;
   late String _email;
   String? _firebaseUid;
+
+  final Repository _repository = Repository();
 
   @override
   void initState() {
@@ -71,6 +74,8 @@ class _ProfilePageState extends State<ProfilePage> {
         // Save the updated information to SharedPreferences
         _saveUserData(result.firebaseUid, result.name, result.email);
       });
+      // Update the user information in the repository
+      await _repository.updateUser(result);
     }
   }
 

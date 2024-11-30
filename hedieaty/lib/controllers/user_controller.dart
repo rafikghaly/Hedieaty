@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -15,7 +16,7 @@ class UserController {
     return await DatabaseInitializer().database;
   }
 
-  Future<void> insertUser(User user) async {
+  Future<void> insertUserLocal(User user) async {
     final db = await database;
     await db.insert(
       'users',
@@ -24,7 +25,11 @@ class UserController {
     );
   }
 
-  Future<User?> getUserByEmail(String email) async {
+  Future<void> insertUserFirestore(User user) async {
+    await FirebaseFirestore.instance.collection('users').doc(user.firebaseUid).set(user.toMap());
+  }
+
+  Future<User?> getUserByEmailLocal(String email) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'users',
@@ -40,7 +45,17 @@ class UserController {
     }
   }
 
-  Future<User?> getUserById(int id) async {
+  Future<User?> getUserByEmailFirestore(String email) async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('users').where('email', isEqualTo: email).get();
+    if (querySnapshot.docs.isNotEmpty) {
+      var doc = querySnapshot.docs.first;
+      return User.fromMap(doc.data());
+    } else {
+      return null;
+    }
+  }
+
+  Future<User?> getUserByIdLocal(int id) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'users',
@@ -56,7 +71,17 @@ class UserController {
     }
   }
 
-  Future<User?> getUserByFirebaseUid(String firebaseUid) async {
+  Future<User?> getUserByIdFirestore(int id) async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('users').where('id', isEqualTo: id).get();
+    if (querySnapshot.docs.isNotEmpty) {
+      var doc = querySnapshot.docs.first;
+      return User.fromMap(doc.data());
+    } else {
+      return null;
+    }
+  }
+
+  Future<User?> getUserByFirebaseUidLocal(String firebaseUid) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'users',
@@ -72,7 +97,16 @@ class UserController {
     }
   }
 
-  Future<void> updateUser(User user) async {
+  Future<User?> getUserByFirebaseUidFirestore(String firebaseUid) async {
+    var docSnapshot = await FirebaseFirestore.instance.collection('users').doc(firebaseUid).get();
+    if (docSnapshot.exists) {
+      return User.fromMap(docSnapshot.data() as Map<String, dynamic>);
+    } else {
+      return null;
+    }
+  }
+
+  Future<void> updateUserLocal(User user) async {
     final db = await database;
     await db.update(
       'users',
@@ -83,8 +117,14 @@ class UserController {
     await _updatePledgedGiftsWithNewUserName(user.id!, user.name);
   }
 
-  Future<void> _updatePledgedGiftsWithNewUserName(
-      int userId, String newName) async {
+  Future<void> updateUserFirestore(User user) async {
+    await FirebaseFirestore.instance.collection('users').doc(user.firebaseUid).update({
+      'name': user.name,
+      'email': user.email,
+    });
+  }
+
+  Future<void> _updatePledgedGiftsWithNewUserName(int userId, String newName) async {
     final db = await database; // Find all events created by this user
     final List<Map<String, dynamic>> eventMaps = await db.query(
       'events',
@@ -98,13 +138,17 @@ class UserController {
     }
   }
 
-  Future<void> deleteUser(int id) async {
+  Future<void> deleteUserLocal(int id) async {
     final db = await database;
     await db.delete(
       'users',
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<void> deleteUserByFirebaseUidFirestore(String firebaseUid) async {
+    await FirebaseFirestore.instance.collection('users').doc(firebaseUid).delete();
   }
 
   String _hashPassword(String password) {
@@ -117,18 +161,13 @@ class UserController {
     final hashedPassword = _hashPassword(password);
 
     try {
-      // Register user with Firebase Authentication
-      print("Controller");
-
       firebase_auth.UserCredential userCredential = await firebase_auth.FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Get the Firebase UID
       String firebaseUid = userCredential.user!.uid;
 
-      // Create a new User object with Firebase UID
       User newUser = User(
         id: firebaseUid.hashCode, // Using Firebase UID's hash as a local ID "So I don't have to change the local structure"
         firebaseUid: firebaseUid,
@@ -138,8 +177,8 @@ class UserController {
         password: hashedPassword,
       );
 
-      // Insert the new user into the local database
-      await insertUser(newUser);
+      await insertUserLocal(newUser);
+      await insertUserFirestore(newUser);
       print("User registered successfully with Firebase UID: $firebaseUid");
 
     } catch (e) {
@@ -174,12 +213,16 @@ class UserController {
     return result.isNotEmpty;
   }
 
-  // New method to fetch all users
-  Future<List<User>> users() async {
+  Future<List<User>> usersLocal() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('users');
     return List.generate(maps.length, (i) {
       return User.fromMap(maps[i]);
     });
+  }
+
+  Future<List<User>> usersFirestore() async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('users').get();
+    return querySnapshot.docs.map((doc) => User.fromMap(doc.data())).toList();
   }
 }

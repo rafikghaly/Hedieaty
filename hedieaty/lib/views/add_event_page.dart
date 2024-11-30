@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
-import '../controllers/event_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 
 class AddEventPage extends StatefulWidget {
   final int userId;
+  final int firebaseId;
   final Function(Event) onEventAdded;
 
-  const AddEventPage({super.key, required this.userId, required this.onEventAdded});
+  const AddEventPage({super.key, required this.userId, required this.onEventAdded, required this.firebaseId});
 
   @override
   _AddEventPageState createState() => _AddEventPageState();
@@ -19,6 +20,8 @@ class _AddEventPageState extends State<AddEventPage> {
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
   String status = "Upcoming";
+
+  final Repository _repository = Repository();
 
   void _addEvent() async {
     final String name = nameController.text;
@@ -35,11 +38,11 @@ class _AddEventPageState extends State<AddEventPage> {
       date: date,
       location: location,
       description: description,
-      userId: widget.userId, // Use the actual user ID from the parameter
+      userId: widget.firebaseId, // Use the actual user ID from the parameter
       gifts: [],
     );
 
-    await EventController().insertEvent(newEvent);
+    await _repository.insertEvent(newEvent);
     widget.onEventAdded(newEvent); // Notify the parent about the new event
 
     Navigator.pop(context); // Go back to the previous screen

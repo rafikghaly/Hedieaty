@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
-import '../controllers/event_controller.dart';
+import 'package:hedieaty/controllers/repository.dart';
 
 class EditEventPage extends StatefulWidget {
   final Event event;
@@ -21,6 +21,7 @@ class _EditEventPageState extends State<EditEventPage> {
   late String _selectedStatus;
 
   final List<String> _statusOptions = ['Upcoming', 'Current', 'Past'];
+  final Repository _repository = Repository();
 
   @override
   void initState() {
@@ -46,7 +47,7 @@ class _EditEventPageState extends State<EditEventPage> {
       gifts: widget.event.gifts,
     );
 
-    await EventController().updateEvent(updatedEvent);
+    await _repository.updateEvent(updatedEvent);
     widget.onEventEdited(updatedEvent);
     Navigator.pop(context);
   }

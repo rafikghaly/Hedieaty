@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
+import 'package:hedieaty/controllers/repository.dart';
 import '../controllers/user_controller.dart';
 
 class EditUserInfoPage extends StatefulWidget {
@@ -17,6 +18,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
   late String? _email;
   late String? _preferences;
   late String? _password;
+  final Repository _repository = Repository();
   final UserController _userController = UserController();
 
   @override
@@ -85,7 +87,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         password: _password ?? widget.user.password,
       );
 
-      await _userController.updateUser(updatedUser);
+      await _repository.updateUser(updatedUser);
 
       Navigator.pop(context, updatedUser);
     }
