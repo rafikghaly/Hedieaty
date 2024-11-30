@@ -23,9 +23,12 @@ class Repository {
   }
 
   // User methods
-  Future<void> registerUser(
-      String email, String password, String name, String preferences) async {
-    await _userController.registerUser(email, password, name, preferences);
+  Future<void> registerUser(String email, String password, String name, String preferences) async {
+    if (await _isOnline()) {
+      await _userController.registerUser(email, password, name, preferences);
+    } else {
+      throw Exception("Cannot register user while offline.");
+    }
   }
 
   Future<User?> authenticateUser(String email, String password) async {
@@ -57,17 +60,19 @@ class Repository {
   }
 
   Future<void> updateUser(User user) async {
-    await _userController.updateUserLocal(user);
     if (await _isOnline()) {
       await _userController.updateUserFirestore(user);
+    } else {
+      throw Exception("Cannot update user while offline.");
     }
   }
 
   Future<void> deleteUser(String firebaseUid) async {
     if (await _isOnline()) {
       await _userController.deleteUserByFirebaseUidFirestore(firebaseUid);
+    } else {
+      throw Exception("Cannot delete user while offline.");
     }
-    await _userController.deleteUserLocal(firebaseUid.hashCode);
   }
 
   Future<List<User>> getUsers() async {
@@ -80,15 +85,16 @@ class Repository {
 
   // Event methods
   Future<void> insertEvent(Event event) async {
-    // Insert event locally to get auto-generated ID
-    int localId = await _eventController.insertEventLocal(event);
-
-    // If online, insert event to Firestore and set Firestore doc ID as event ID
+    //TODO Use it when making an offline list of Events
+    // // Insert event locally to get auto-generated ID
+    // int localId = await _eventController.insertEventLocal(event);
+    //
+    // // If online, insert event to Firestore and set Firestore doc ID as event ID
+    // event.id = localId; // Ensure the ID is reset before setting it again
     if (await _isOnline()) {
-      event.id = localId; // Ensure the ID is reset before setting it again
       await _eventController.insertEventFirestore(event);
     } else {
-      event.id = localId; // Assign the local ID if offline
+      throw Exception("Cannot insert event while offline.");
     }
   }
 
@@ -109,23 +115,24 @@ class Repository {
   }
 
   Future<void> updateEvent(Event event) async {
-    await _eventController.updateEventLocal(event);
     if (await _isOnline()) {
       await _eventController.updateEventFirestore(event);
+    } else {
+      throw Exception("Cannot update event while offline.");
     }
   }
 
   Future<void> deleteEvent(String id) async {
     if (await _isOnline()) {
       await _eventController.deleteEventFirestore(id);
+    } else {
+      throw Exception("Cannot delete event while offline.");
     }
-    //TODO await _eventController.deleteEventLocal(id as int); //TODO Change the id delete into string
   }
 
   // Friend methods
   Future<void> insertFriend(Friend friend) async {
     if (await _isOnline()) {
-      await _friendController.insertFriendLocal(friend);
       await _friendController.insertFriendFirestore(friend);
     } else {
       throw Exception("Cannot add friend while offline.");
@@ -154,7 +161,6 @@ class Repository {
 
   Future<void> updateFriend(Friend friend) async {
     if (await _isOnline()) {
-      await _friendController.updateFriendLocal(friend);
       await _friendController.updateFriendFirestore(friend);
     } else {
       throw Exception("Cannot update friend while offline.");
@@ -163,7 +169,6 @@ class Repository {
 
   Future<void> deleteFriend(int id) async {
     if (await _isOnline()) {
-      await _friendController.deleteFriendLocal(id);
       await _friendController.deleteFriendFirestore(id);
     } else {
       throw Exception("Cannot delete friend while offline.");
@@ -172,9 +177,12 @@ class Repository {
 
   // Gift methods
   Future<void> insertGift(Gift gift) async {
-    await _giftController.insertGiftLocal(gift);
+    //TODO Use it when making an offline list of Events
+    // await _giftController.insertGiftLocal(gift);
     if (await _isOnline()) {
       await _giftController.insertGiftFirestore(gift);
+    } else {
+      throw Exception("Cannot insert gift while offline.");
     }
   }
 
@@ -200,25 +208,28 @@ class Repository {
   }
 
   Future<void> updateGift(Gift gift) async {
-    await _giftController.updateGiftLocal(gift);
     if (await _isOnline()) {
       await _giftController.updateGiftFirestore(gift);
+    } else {
+      throw Exception("Cannot update gift while offline.");
     }
   }
 
   Future<void> deleteGift(String id) async {
     if (await _isOnline()) {
       await _giftController.deleteGiftFirestore(id);
+    } else {
+      throw Exception("Cannot delete gift while offline.");
     }
     //TODO await _giftController.deleteGiftLocal(id);//TODO Change the id into string
   }
 
   // PledgedGift methods
   Future<void> insertPledgedGift(PledgedGift pledgedGift) async {
-    await _pledgedGiftController.insertPledgedGiftLocal(
-        pledgedGift); //TODO check for null id (check offline functionality)
     if (await _isOnline()) {
       await _pledgedGiftController.insertPledgedGiftFirestore(pledgedGift);
+    } else {
+      throw Exception("Cannot insert pledged gift while offline.");
     }
   }
 
@@ -242,6 +253,8 @@ class Repository {
   Future<void> deletePledgedGift(String id) async {
     if (await _isOnline()) {
       await _pledgedGiftController.deletePledgedGiftFirestore(id);
+    } else {
+      throw Exception("Cannot delete pledged gift while offline.");
     }
     //TODO await _pledgedGiftController.deletePledgedGiftLocal(id);//TODO Change the id delete into string
   }

@@ -20,18 +20,24 @@ class DatabaseInitializer {
       path,
       version: 1,
       onCreate: (db, version) async {
-        await db.execute(
-          'CREATE TABLE IF NOT EXISTS users('
-          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
-          'firebase_uid TEXT UNIQUE, '
-          'name TEXT, '
-          'email TEXT, '
-          'preferences TEXT, '
-          'password TEXT'
-          ')',
-        );
-        await db.execute(
-          'CREATE TABLE IF NOT EXISTS friends('
+        await _createTables(db);
+      },
+    );
+  }
+
+  Future<void> _createTables(Database db) async {
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS users('
+      'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+      'firebase_uid TEXT UNIQUE, '
+      'name TEXT, '
+      'email TEXT, '
+      'preferences TEXT, '
+      'password TEXT'
+      ')',
+    );
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS friends('
           'id INTEGER PRIMARY KEY AUTOINCREMENT, '
           'userId1 INTEGER, '
           'userId2 INTEGER, '
@@ -79,9 +85,16 @@ class DatabaseInitializer {
           'FOREIGN KEY(eventId) REFERENCES events(id), '
           'FOREIGN KEY(userId) REFERENCES users(id), '
           'FOREIGN KEY(giftId) REFERENCES gifts(id)'
-          ')',
-        );
-      },
-    );
+          ')',);
+  }
+
+  Future<void> clearDatabase() async {
+    final db = await database;
+    await db.execute('DELETE FROM users');
+    await db.execute('DELETE FROM friends');
+    await db.execute('DELETE FROM events');
+    await db.execute('DELETE FROM gifts');
+    await db.execute('DELETE FROM pledged_gifts');
+    // print("CLEARED DATABASE");
   }
 }

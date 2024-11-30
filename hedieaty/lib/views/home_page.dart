@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../controllers/sync_controller.dart';
 import '../models/friend.dart';
 import '../models/event.dart';
 import '../models/user.dart';
@@ -133,7 +134,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _logout(BuildContext context) {
+  Future<void> _logout(BuildContext context) async {
+    SyncController syncController = SyncController();
+    await syncController.syncUserData(widget.firebaseId);
+    print('User data synchronized successfully.');
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => SignInPage()),

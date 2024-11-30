@@ -5,6 +5,17 @@ import 'package:sqflite/sqflite.dart';
 class SyncController {
   final DatabaseInitializer _databaseInitializer = DatabaseInitializer();
 
+  // Method to clear the local database
+  Future<void> clearLocalDatabase() async {
+    final db = await _databaseInitializer.database;
+    await db.execute('DELETE FROM users');
+    await db.execute('DELETE FROM friends');
+    await db.execute('DELETE FROM events');
+    await db.execute('DELETE FROM gifts');
+    await db.execute('DELETE FROM pledged_gifts');
+    // print('Cleared DB');
+  }
+
   // Method to fetch user-related data from Firebase
   Future<Map<String, dynamic>> fetchUserDataFromFirebase(int userId) async {
     // Fetch user data
@@ -124,6 +135,7 @@ class SyncController {
 
   // Method to synchronize user data
   Future<void> syncUserData(int userId) async {
+    await clearLocalDatabase();
     var data = await fetchUserDataFromFirebase(userId);
     await insertDataIntoLocalDatabase(data);
   }
