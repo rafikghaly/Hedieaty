@@ -28,7 +28,7 @@ class GiftListPage extends StatefulWidget {
 
 class _GiftListPageState extends State<GiftListPage> {
   late List<Gift> _gifts = [];
-  late Map<int, String> _pledgedUserNames = {};
+  late final Map<int, String> _pledgedUserNames = {};
   Event? _event;
   User? _user;
   late String _userName;
@@ -54,16 +54,20 @@ class _GiftListPageState extends State<GiftListPage> {
   }
 
   Future<void> _fetchEventUserAndGifts() async {
-    //Get the events and User details
+    // Get the event and user details
+    // print('Fetching event and user details for eventId ${widget.eventId} and userId ${widget.userId}');
     _event = await _repository.getEventById(widget.eventId);
     _user = await _repository.getUserById(widget.userId);
 
     // Get the gifts associated with the event
     if (widget.showPledgedGifts) {
       final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
+      // print('Pledged gifts: $pledgedGifts');
       _gifts = [];
       for (var pledgedGift in pledgedGifts) {
-        final gift = await _repository.getGiftById(pledgedGift.giftId);
+        // print('Fetching gift details for gift ID ${pledgedGift.giftId}');
+        final gift = await _repository.getGiftById(pledgedGift.giftId as String);
+        // print('Gift details for pledged gift ${pledgedGift.giftId}: $gift');
         if (gift != null) {
           _gifts.add(gift);
         }
@@ -81,9 +85,10 @@ class _GiftListPageState extends State<GiftListPage> {
         if (pledgedUser != null) {
           _pledgedUserNames[gift.id!] = pledgedUser.name;
         }
-      }
+            }
     }
 
+    // print('Fetched gifts: $_gifts');
     setState(() {});
   }
 
@@ -95,19 +100,22 @@ class _GiftListPageState extends State<GiftListPage> {
 
     final pledgedGift = PledgedGift(
       eventId: widget.eventId,
-      userId: _userId!,
-      giftId: gift.id!,
+      userId: _userId ?? 0,
+      giftId: gift.id ?? 0,
       friendName: _user?.name ?? 'Unknown',
       dueDate: _event?.date ?? 'Unknown',
+      docId: '', // Initialize docId as empty string
     );
+
+    // print('Pledging gift: $gift with pledgedGift: $pledgedGift');
 
     if (gift.isPledged) {
       await _repository.insertPledgedGift(pledgedGift);
     } else {
       final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
       final giftToDelete = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
-      await _repository.deletePledgedGift(giftToDelete.id!);
-    }
+      await _repository.deletePledgedGift(giftToDelete.docId ?? '');
+        }
 
     await _repository.updateGift(gift);
     await _refreshGifts();

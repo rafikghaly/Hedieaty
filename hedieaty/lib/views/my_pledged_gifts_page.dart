@@ -27,20 +27,30 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
 
   Future<void> _fetchPledgedGifts() async {
     final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
-    _pledgedGiftsWithDetails = [];
+    // print('Pledged gifts for user ${widget.userId}: $pledgedGifts');
 
+    _pledgedGiftsWithDetails = [];
     for (var pledgedGift in pledgedGifts) {
-      final gift = await _repository.getGiftById(pledgedGift.giftId);
+      // print('Fetching gift details for gift docId ${pledgedGift.docId}');
+      final gift = await _repository.getGiftById_For_pledged_Firestore(pledgedGift.giftId);
+      // print('Gift details for gift docId ${pledgedGift.docId}: $gift');
+      // print(pledgedGift.userId);
+      // print(widget.userId);
+
       if (gift != null && pledgedGift.userId == widget.userId) {
-        // Ensure the gift is not the user's own gift
         _pledgedGiftsWithDetails.add({
           'gift': gift,
           'friendName': pledgedGift.friendName,
           'dueDate': pledgedGift.dueDate,
+          'docId': pledgedGift.docId,  // Include the docId
         });
+        // print('Added gift: ${gift.name}');
+      } else {
+        // print('Gift is null or does not belong to the user');
       }
     }
 
+    // print('Pledged gifts with details: $_pledgedGiftsWithDetails');
     setState(() {});
   }
 
@@ -61,6 +71,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
             final gift = _pledgedGiftsWithDetails[index]['gift'] as Gift;
             final friendName = _pledgedGiftsWithDetails[index]['friendName'] as String;
             final dueDate = _pledgedGiftsWithDetails[index]['dueDate'] as String;
+            final docId = _pledgedGiftsWithDetails[index]['docId'] as String;
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),

@@ -1,5 +1,5 @@
 class Gift {
-  final int? id;
+  late int? id;
   final int eventId;
   final String name;
   final String description;
@@ -8,9 +8,10 @@ class Gift {
   bool isPledged;
   final String? imageUrl;
   final double price;
+  String? docId;
 
   Gift({
-    required this.id,
+    this.id,
     required this.eventId,
     required this.name,
     required this.description,
@@ -19,6 +20,7 @@ class Gift {
     required this.isPledged,
     required this.imageUrl,
     required this.price,
+    required this.docId,
   });
 
   Map<String, dynamic> toMap() {
@@ -32,6 +34,7 @@ class Gift {
       'isPledged': isPledged ? 1 : 0,
       'imageUrl': imageUrl,
       'price': price,
+      'docId': docId,
     };
   }
 
@@ -46,6 +49,7 @@ class Gift {
       isPledged: map['isPledged'] == 1,
       imageUrl: map['imageUrl'] as String?,
       price: map['price'] as double,
+      docId: map['docId'] as String?,
     );
   }
 }

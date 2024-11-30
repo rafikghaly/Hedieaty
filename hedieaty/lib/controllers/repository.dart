@@ -23,7 +23,8 @@ class Repository {
   }
 
   // User methods
-  Future<void> registerUser(String email, String password, String name, String preferences) async {
+  Future<void> registerUser(
+      String email, String password, String name, String preferences) async {
     await _userController.registerUser(email, password, name, preferences);
   }
 
@@ -131,10 +132,13 @@ class Repository {
     }
   }
 
-  Future<void> addMutualFriends(int userId1, int userId2, String userName1, String userName2) async {
+  Future<void> addMutualFriends(
+      int userId1, int userId2, String userName1, String userName2) async {
     if (await _isOnline()) {
-      await _friendController.addMutualFriendsLocal(userId1, userId2, userName1, userName2);
-      await _friendController.addMutualFriendsFirestore(userId1, userId2, userName1, userName2);
+      await _friendController.addMutualFriendsLocal(
+          userId1, userId2, userName1, userName2);
+      await _friendController.addMutualFriendsFirestore(
+          userId1, userId2, userName1, userName2);
     } else {
       throw Exception("Cannot add mutual friends while offline.");
     }
@@ -182,12 +186,17 @@ class Repository {
     }
   }
 
-  Future<Gift?> getGiftById(int id) async {
+  Future<Gift?> getGiftById(String id) async {
     if (await _isOnline()) {
       return await _giftController.getGiftByIdFirestore(id);
     } else {
-      return await _giftController.getGiftByIdLocal(id);
+      //TODO return await _giftController.getGiftByIdLocal(id);//TODO Change the id into string
     }
+    return null;
+  }
+
+  Future<Gift?> getGiftById_For_pledged_Firestore(int id) async {
+    return await _giftController.getGiftById_for_pledged_Firestore(id);
   }
 
   Future<void> updateGift(Gift gift) async {
@@ -197,16 +206,17 @@ class Repository {
     }
   }
 
-  Future<void> deleteGift(int id) async {
+  Future<void> deleteGift(String id) async {
     if (await _isOnline()) {
       await _giftController.deleteGiftFirestore(id);
     }
-    await _giftController.deleteGiftLocal(id);
+    //TODO await _giftController.deleteGiftLocal(id);//TODO Change the id into string
   }
 
   // PledgedGift methods
   Future<void> insertPledgedGift(PledgedGift pledgedGift) async {
-    await _pledgedGiftController.insertPledgedGiftLocal(pledgedGift);
+    await _pledgedGiftController.insertPledgedGiftLocal(
+        pledgedGift); //TODO check for null id (check offline functionality)
     if (await _isOnline()) {
       await _pledgedGiftController.insertPledgedGiftFirestore(pledgedGift);
     }
@@ -222,16 +232,17 @@ class Repository {
 
   Future<List<PledgedGift>> getPledgedGiftsForEvent(int eventId) async {
     if (await _isOnline()) {
-      return await _pledgedGiftController.getPledgedGiftsForEventFirestore(eventId);
+      return await _pledgedGiftController
+          .getPledgedGiftsForEventFirestore(eventId);
     } else {
       return await _pledgedGiftController.getPledgedGiftsForEventLocal(eventId);
     }
   }
 
-  Future<void> deletePledgedGift(int id) async {
+  Future<void> deletePledgedGift(String id) async {
     if (await _isOnline()) {
       await _pledgedGiftController.deletePledgedGiftFirestore(id);
     }
-    await _pledgedGiftController.deletePledgedGiftLocal(id);
+    //TODO await _pledgedGiftController.deletePledgedGiftLocal(id);//TODO Change the id delete into string
   }
 }

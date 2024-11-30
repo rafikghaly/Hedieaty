@@ -29,7 +29,8 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late String _userName;
   late String _email;
-  String? _firebaseUid;
+  late int? _firebaseId;
+  late String _firebaseUid;
 
   final Repository _repository = Repository();
 
@@ -44,7 +45,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _firebaseUid = prefs.getString('firebaseUid');
+      _firebaseId = prefs.getInt('firebaseId');
+      _firebaseUid = prefs.getString('firebaseUId')!;
       _userName = prefs.getString('userName') ?? '';
       _email = prefs.getString('email') ?? '';
     });
@@ -52,8 +54,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _editUserInfo() async {
     final user = User(
-      id: _firebaseUid!.hashCode,
-      firebaseUid: _firebaseUid!,
+      id: _firebaseId?.hashCode ?? 0,
+      firebaseUid: _firebaseUid ?? '',
       name: _userName,
       email: _email,
       preferences: 'Default Preferences',
@@ -112,12 +114,19 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MyPledgedGiftsPage(userId: _firebaseUid!.hashCode),
-                  ),
-                );
+                if (_firebaseId != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MyPledgedGiftsPage(userId: _firebaseId!),
+                    ),
+                  );
+                } else {
+                  // Handle case where firebaseUid is null
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('User ID is not available.')),
+                  );
+                }
               },
               child: const Text('My Pledged Gifts'),
             ),

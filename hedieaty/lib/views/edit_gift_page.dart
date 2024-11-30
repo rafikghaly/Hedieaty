@@ -45,6 +45,7 @@ class _EditGiftPageState extends State<EditGiftPage> {
         isPledged: widget.gift.isPledged, // Keep existing pledge status
         imageUrl: _imageUrl,
         price: _price,
+        docId: widget.gift.docId,
       );
 
       await _repository.updateGift(updatedGift);

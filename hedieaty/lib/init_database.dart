@@ -56,6 +56,7 @@ class DatabaseInitializer {
         await db.execute(
           'CREATE TABLE IF NOT EXISTS gifts('
           'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'docId TEXT, '
           'name TEXT, '
           'description TEXT, '
           'category TEXT, '
@@ -69,6 +70,7 @@ class DatabaseInitializer {
         await db.execute(
           'CREATE TABLE IF NOT EXISTS pledged_gifts('
           'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'docId TEXT, '
           'eventId INTEGER, '
           'userId INTEGER, '
           'giftId INTEGER, '

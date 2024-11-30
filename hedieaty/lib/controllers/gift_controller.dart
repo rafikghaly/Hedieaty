@@ -12,17 +12,22 @@ class GiftController {
     return await DatabaseInitializer().database;
   }
 
-  Future<void> insertGiftLocal(Gift gift) async {
+  Future<int> insertGiftLocal(Gift gift) async {
     final db = await database;
-    await db.insert(
+    final giftMap = gift.toMap();
+    giftMap.remove('id'); // Ensure ID is not set for auto-increment
+    return await db.insert(
       'gifts',
-      gift.toMap(),
+      giftMap,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   Future<void> insertGiftFirestore(Gift gift) async {
-    await FirebaseFirestore.instance.collection('gifts').add(gift.toMap());
+    final docRef = FirebaseFirestore.instance.collection('gifts').doc();
+    gift.docId = docRef.id;
+    gift.id = docRef.id.hashCode;
+    await docRef.set(gift.toMap());
   }
 
   Future<List<Gift>> giftsLocal(int eventId) async {
@@ -39,7 +44,10 @@ class GiftController {
   }
 
   Future<List<Gift>> giftsFirestore(int eventId) async {
-    var querySnapshot = await FirebaseFirestore.instance.collection('gifts').where('eventId', isEqualTo: eventId).get();
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('gifts')
+        .where('eventId', isEqualTo: eventId)
+        .get();
     return querySnapshot.docs.map((doc) => Gift.fromMap(doc.data())).toList();
   }
 
@@ -58,11 +66,24 @@ class GiftController {
     }
   }
 
-  Future<Gift?> getGiftByIdFirestore(int id) async {
-    var docSnapshot = await FirebaseFirestore.instance.collection('gifts').doc(id.toString()).get();
+  Future<Gift?> getGiftByIdFirestore(String docId) async {
+    var docSnapshot =
+        await FirebaseFirestore.instance.collection('gifts').doc(docId).get();
     if (docSnapshot.exists) {
       return Gift.fromMap(docSnapshot.data() as Map<String, dynamic>);
     } else {
+      return null;
+    }
+  }
+
+  Future<Gift?> getGiftById_for_pledged_Firestore(int id) async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('gifts').where('id', isEqualTo: id).get();
+    if (querySnapshot.docs.isNotEmpty) {
+      var docSnapshot = querySnapshot.docs.first;
+      // print('Gift data retrieved: ${docSnapshot.data()}');
+      return Gift.fromMap(docSnapshot.data() as Map<String, dynamic>);
+    } else {
+      // print('No gift found for gift ID: $id');
       return null;
     }
   }
@@ -78,7 +99,10 @@ class GiftController {
   }
 
   Future<void> updateGiftFirestore(Gift gift) async {
-    await FirebaseFirestore.instance.collection('gifts').doc(gift.id.toString()).update(gift.toMap());
+    await FirebaseFirestore.instance
+        .collection('gifts')
+        .doc(gift.docId)
+        .update(gift.toMap());
   }
 
   Future<void> deleteGiftLocal(int id) async {
@@ -90,7 +114,7 @@ class GiftController {
     );
   }
 
-  Future<void> deleteGiftFirestore(int id) async {
-    await FirebaseFirestore.instance.collection('gifts').doc(id.toString()).delete();
+  Future<void> deleteGiftFirestore(String docId) async {
+    await FirebaseFirestore.instance.collection('gifts').doc(docId).delete();
   }
 }

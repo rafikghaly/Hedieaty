@@ -28,6 +28,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
 
       final newGift = Gift(
         id: null, // ID is auto-generated
+        eventId: widget.eventId,
         name: _name,
         description: _description,
         category: _category,
@@ -35,7 +36,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
         price: _price,
         isPledged: false,
         imageUrl: _imageUrl,
-        eventId: widget.eventId,
+        docId: null,
       );
 
       await _repository.insertGift(newGift);

@@ -12,35 +12,51 @@ class PledgedGiftController {
     return await DatabaseInitializer().database;
   }
 
-  Future<void> insertPledgedGiftLocal(PledgedGift pledgedGift) async {
+  Future<int> insertPledgedGiftLocal(PledgedGift pledgedGift) async {
     final db = await database;
-    await db.insert(
+    final pledgedGiftMap = pledgedGift.toMap();
+    pledgedGiftMap.remove('id'); // Ensure ID is not set for auto-increment
+    return await db.insert(
       'pledged_gifts',
-      pledgedGift.toMap(),
+      pledgedGiftMap,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   Future<void> insertPledgedGiftFirestore(PledgedGift pledgedGift) async {
-    await FirebaseFirestore.instance.collection('pledged_gifts').add(pledgedGift.toMap());
+    // Create a reference to a new document with an auto-generated ID
+    final docRef = FirebaseFirestore.instance.collection('pledged_gifts').doc();
+
+    // The unique Firestore document ID
+    pledgedGift.docId = docRef.id;
+    pledgedGift.id = docRef.id.hashCode;
+
+    // Set the pledged gift data with the newly assigned document ID
+    await docRef.set(pledgedGift.toMap());
   }
 
-  Future<List<PledgedGift>> getPledgedGiftsForUserLocal(int userId) async {
+  Future<PledgedGift?> getPledgedGiftByIdLocal(int id) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'pledged_gifts',
-      where: 'userId = ?',
-      whereArgs: [userId],
+      where: 'id = ?',
+      whereArgs: [id],
     );
-
-    return List.generate(maps.length, (i) {
-      return PledgedGift.fromMap(maps[i]);
-    });
+    if (maps.isNotEmpty) {
+      final map = maps.first;
+      return PledgedGift.fromMap(map);
+    } else {
+      return null;
+    }
   }
 
-  Future<List<PledgedGift>> getPledgedGiftsForUserFirestore(int userId) async {
-    var querySnapshot = await FirebaseFirestore.instance.collection('pledged_gifts').where('userId', isEqualTo: userId).get();
-    return querySnapshot.docs.map((doc) => PledgedGift.fromMap(doc.data())).toList();
+  Future<PledgedGift?> getPledgedGiftByIdFirestore(String docId) async {
+    final docSnapshot = await FirebaseFirestore.instance.collection('pledged_gifts').doc(docId).get();
+    if (docSnapshot.exists) {
+      return PledgedGift.fromMap(docSnapshot.data()!);
+    } else {
+      return null;
+    }
   }
 
   Future<List<PledgedGift>> getPledgedGiftsForEventLocal(int eventId) async {
@@ -58,7 +74,35 @@ class PledgedGiftController {
 
   Future<List<PledgedGift>> getPledgedGiftsForEventFirestore(int eventId) async {
     var querySnapshot = await FirebaseFirestore.instance.collection('pledged_gifts').where('eventId', isEqualTo: eventId).get();
-    return querySnapshot.docs.map((doc) => PledgedGift.fromMap(doc.data())).toList();
+    return querySnapshot.docs.map((doc) {
+      return PledgedGift.fromMap(doc.data());
+    }).toList();
+  }
+
+  Future<void> updatePledgedGiftLocal(PledgedGift pledgedGift) async {
+    final db = await database;
+    await db.update(
+      'pledged_gifts',
+      pledgedGift.toMap(),
+      where: 'id = ?',
+      whereArgs: [pledgedGift.id],
+    );
+  }
+
+  Future<void> updatePledgedGiftFirestore(PledgedGift pledgedGift) async {
+    final docRef = FirebaseFirestore.instance.collection('pledged_gifts').doc(pledgedGift.docId);
+
+    if (pledgedGift.docId != null && pledgedGift.docId!.isNotEmpty) {
+      var docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        await docRef.update(pledgedGift.toMap());
+        // print("Document successfully updated!");
+      } else {
+        // print("No document found with the provided docId.");
+      }
+    } else {
+      // print("Invalid document ID.");
+    }
   }
 
   Future<void> deletePledgedGiftLocal(int id) async {
@@ -70,7 +114,27 @@ class PledgedGiftController {
     );
   }
 
-  Future<void> deletePledgedGiftFirestore(int id) async {
-    await FirebaseFirestore.instance.collection('pledged_gifts').doc(id.toString()).delete();
+  Future<void> deletePledgedGiftFirestore(String docId) async {
+    await FirebaseFirestore.instance.collection('pledged_gifts').doc(docId).delete();
+  }
+
+  Future<List<PledgedGift>> getPledgedGiftsForUserLocal(int userId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'pledged_gifts',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    return List.generate(maps.length, (i) {
+      return PledgedGift.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<PledgedGift>> getPledgedGiftsForUserFirestore(int userId) async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('pledged_gifts').where('userId', isEqualTo: userId).get();
+    return querySnapshot.docs.map((doc) {
+      return PledgedGift.fromMap(doc.data());
+    }).toList();
   }
 }

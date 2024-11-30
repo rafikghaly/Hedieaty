@@ -42,7 +42,7 @@ class EventController {
       final map = maps.first;
       return Event(
         id: map['id'],
-        docId: map['docId'], // Add docId here
+        docId: map['docId'],
         name: map['name'],
         category: map['category'],
         date: map['date'],
@@ -138,9 +138,6 @@ class EventController {
     // Reference the document by the stored Firestore document ID
     final docRef = FirebaseFirestore.instance.collection('events').doc(event.docId);
 
-    // print("Document ID (update): ${docRef.id}");
-    // print("event.docId: ${event.docId}");
-
     // Ensure the document ID exists
     if (event.docId != null && event.docId!.isNotEmpty) {
       // Attempt to get the document snapshot
@@ -148,7 +145,10 @@ class EventController {
 
       if (docSnapshot.exists) {
         await docRef.update(event.toMap());
-        // print("Document successfully updated!");
+        // print("Event document successfully updated!");
+
+        // Update dueDate in pledged gifts associated with this event
+        await updateDueDateInPledgedGifts(event.id!, event.date);
       } else {
         // print("No document found with the provided docId.");
       }
@@ -156,6 +156,24 @@ class EventController {
       // print("Invalid document ID.");
     }
   }
+
+// Method to update the dueDate in pledged gifts associated with the event
+  Future<void> updateDueDateInPledgedGifts(int eventId, String newDueDate) async {
+    // print('Updating dueDate for pledged gifts with eventId: $eventId');
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('pledged_gifts')
+        .where('eventId', isEqualTo: eventId)
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      // print('Pledged gift document found: ${doc.id}');
+      await FirebaseFirestore.instance.collection('pledged_gifts').doc(doc.id).update({
+        'dueDate': newDueDate,
+      });
+      // print('Pledged gift dueDate updated successfully');
+    }
+  }
+
 
   Future<void> _updatePledgedGiftsWithNewEventDate(int eventId, String newDate) async {
     final db = await database;
@@ -176,6 +194,16 @@ class EventController {
   Future<void> deleteEventLocal(int id) async {
     final db = await database;
     await db.delete(
+      'pledged_gifts',
+      where: 'eventId = ?',
+      whereArgs: [id],
+    );
+    await db.delete(
+      'gifts',
+      where: 'eventId = ?',
+      whereArgs: [id],
+    );
+    await db.delete(
       'events',
       where: 'id = ?',
       whereArgs: [id],
@@ -183,6 +211,19 @@ class EventController {
   }
 
   Future<void> deleteEventFirestore(String id) async {
-    await FirebaseFirestore.instance.collection('events').doc(id).delete();
+    var eventDoc = FirebaseFirestore.instance.collection('events').doc(id);
+
+    // Delete related gifts and pledged gifts
+    var giftsQuery = await FirebaseFirestore.instance.collection('gifts').where('eventId', isEqualTo: id.hashCode).get();
+    for (var doc in giftsQuery.docs) {
+      await FirebaseFirestore.instance.collection('gifts').doc(doc.id).delete();
+    }
+
+    var pledgedGiftsQuery = await FirebaseFirestore.instance.collection('pledged_gifts').where('eventId', isEqualTo: id.hashCode).get();
+    for (var doc in pledgedGiftsQuery.docs) {
+      await FirebaseFirestore.instance.collection('pledged_gifts').doc(doc.id).delete();
+    }
+
+    await eventDoc.delete();
   }
 }

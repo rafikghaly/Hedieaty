@@ -6,6 +6,7 @@ import 'package:hedieaty/controllers/repository.dart';
 import '../models/user.dart';
 import 'sign_up_page.dart';
 import '../main.dart';
+import 'package:hedieaty/controllers/sync_controller.dart';
 
 class SignInPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -15,12 +16,23 @@ class SignInPage extends StatelessWidget {
 
   SignInPage({super.key});
 
+
+
+  Future<void> onUserSignIn(int userId) async {
+    SyncController syncController = SyncController();
+    await syncController.syncUserData(userId);
+    print('User data synchronized successfully.');
+  }
+
+
   Future<void> _saveUserLogin(int userId, String userName, String email,int firebaseId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId);
     await prefs.setInt('firebaseId', firebaseId);
+    await prefs.setString('firebaseUId', firebaseId.toString());
     await prefs.setString('userName', userName);
     await prefs.setString('email', email);
+    onUserSignIn(userId);
   }
 
   Future<void> _signIn(BuildContext context) async {
@@ -56,7 +68,7 @@ class SignInPage extends StatelessWidget {
         );
 
         User? user = await _repository.authenticateUser(email, password);
-        print(user);
+        // print(user);
         if (user != null) {
           await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode); // Save user ID and name
           Navigator.pushReplacement(
