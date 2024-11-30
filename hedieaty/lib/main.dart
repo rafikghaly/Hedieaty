@@ -12,20 +12,25 @@ import 'init_database.dart';
 import 'controllers/repository.dart';
 import 'controllers/sync_controller.dart';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    // Perform your sync task here
     final SyncController syncController = SyncController();
     SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check network connectivity
+    var connectivityResult = await (Connectivity().checkConnectivity());
 
     // Get the user ID from SharedPreferences
     int? userId = prefs.getInt('userId');
 
-    // Ensure to pass the userId
-    if (userId != null) {
+    // Ensure to pass the userId and check network connection
+    if (userId != null && connectivityResult[0] != ConnectivityResult.none) {
       await syncController.syncUserData(userId);
+      print('User data synchronized successfully.');
     } else {
-      // print('User ID not found in SharedPreferences.');
+      print('No network connection. Skipping synchronization.');
     }
 
     return Future.value(true);

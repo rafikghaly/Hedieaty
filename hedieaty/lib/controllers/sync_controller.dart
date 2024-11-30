@@ -5,7 +5,6 @@ import 'package:sqflite/sqflite.dart';
 class SyncController {
   final DatabaseInitializer _databaseInitializer = DatabaseInitializer();
 
-  // Method to clear the local database
   Future<void> clearLocalDatabase() async {
     final db = await _databaseInitializer.database;
     await db.execute('DELETE FROM users');
@@ -13,12 +12,11 @@ class SyncController {
     await db.execute('DELETE FROM events');
     await db.execute('DELETE FROM gifts');
     await db.execute('DELETE FROM pledged_gifts');
+    await db.execute('DELETE FROM friend_local');
     // print('Cleared DB');
   }
 
-  // Method to fetch user-related data from Firebase
   Future<Map<String, dynamic>> fetchUserDataFromFirebase(int userId) async {
-    // Fetch user data
     var userSnapshot = await FirebaseFirestore.instance
         .collection('users')
         .where('id', isEqualTo: userId)
@@ -33,7 +31,6 @@ class SyncController {
     var events = eventsSnapshot.docs.map((doc) => doc.data()).toList();
     // print('User events: $events');
 
-    // Fetch event IDs
     var eventIds = eventsSnapshot.docs.map((doc) => doc['id'] as int).toList();
 
     // Fetch gifts associated with the events
@@ -68,7 +65,15 @@ class SyncController {
       friends = friendsSnapshot.docs.map((doc) => doc.data()).toList();
     }
 
-    // print('User friends: $friends');
+    // Fetch friend user data
+    List<Map<String, dynamic>> friendUsers = [];
+    for (var friend in friends) {
+      var friendUserSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('id', isEqualTo: friend['userId2'])
+          .get();
+      friendUsers.addAll(friendUserSnapshot.docs.map((doc) => doc.data()).toList());
+    }
 
     // Fetch friends' events and gifts
     for (var friend in friends) {
@@ -100,16 +105,25 @@ class SyncController {
       'gifts': gifts,
       'pledged_gifts': pledgedGifts,
       'friends': friends,
+      'friendUsers': friendUsers,
     };
   }
 
-  // Method to insert data into local database
   Future<void> insertDataIntoLocalDatabase(Map<String, dynamic> data) async {
+    await clearLocalDatabase();
     final db = await _databaseInitializer.database;
 
     // Insert user data into local database
     for (var user in data['user']) {
       await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+
+    // Insert friend user data into friend_local table
+    for (var friendUser in data['friendUsers']) {
+      await db.insert('friend_local', {
+        'friendUserId': friendUser['id'],
+        'name': friendUser['name'],
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
     // Insert events data into local database
@@ -133,9 +147,7 @@ class SyncController {
     }
   }
 
-  // Method to synchronize user data
   Future<void> syncUserData(int userId) async {
-    await clearLocalDatabase();
     var data = await fetchUserDataFromFirebase(userId);
     await insertDataIntoLocalDatabase(data);
   }

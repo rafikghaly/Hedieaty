@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../controllers/sync_controller.dart';
@@ -93,7 +94,6 @@ class _HomePageState extends State<HomePage> {
       // Refresh the friend list
       _fetchFriends();
     } else {
-      // Show a message that user does not exist
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User does not exist')),
       );
@@ -135,9 +135,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _logout(BuildContext context) async {
-    SyncController syncController = SyncController();
-    await syncController.syncUserData(widget.firebaseId);
-    print('User data synchronized successfully.');
+    //TODO SYNC WHEN MAKING LOCAL EVENT
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult[0] != ConnectivityResult.none) {
+      SyncController syncController = SyncController();
+      await syncController.syncUserData(widget.firebaseId);
+      // print('User data synchronized successfully.');
+    } else {
+      // print('No network connection. Skipping synchronization.');
+    }
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => SignInPage()),
@@ -168,7 +175,7 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
       ),
       body: RefreshIndicator(
-        onRefresh: _fetchFriends, // Trigger the refresh when the list is pulled down
+        onRefresh: _fetchFriends,
         child: Column(
           children: [
             Padding(
@@ -223,6 +230,10 @@ class FriendFrame extends StatelessWidget {
 
   Future<String> _fetchFriendName(int friendUserId) async {
     User? friendUser = await _repository.getUserById(friendUserId);
+    if (friendUser?.name ==null)
+      {
+        return await _repository.getFriendNameByIdLocal(friendUserId)?? "Unknown";
+      }
     return friendUser?.name ?? 'Unknown';
   }
 

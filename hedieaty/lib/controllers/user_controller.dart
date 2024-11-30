@@ -81,6 +81,23 @@ class UserController {
     }
   }
 
+  Future<String> getFriendNameByIdLocal(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'friend_local',
+      columns: ['name'],
+      where: 'friendUserId = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return maps.first['name'] as String;
+    } else {
+      return 'Unknown';
+    }
+  }
+
+
   Future<User?> getUserByIdFirestore(int id) async {
     var querySnapshot = await FirebaseFirestore.instance
         .collection('users')

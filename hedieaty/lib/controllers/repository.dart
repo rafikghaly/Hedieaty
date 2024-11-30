@@ -51,6 +51,10 @@ class Repository {
     }
   }
 
+
+  Future<String> getFriendNameByIdLocal(int id) async {
+    return await _userController.getFriendNameByIdLocal(id);
+  }
   Future<User?> getUserByFirebaseUid(String firebaseUid) async {
     if (await _isOnline()) {
       return await _userController.getUserByFirebaseUidFirestore(firebaseUid);
