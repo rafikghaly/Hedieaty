@@ -18,6 +18,8 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
   late List<Map<String, dynamic>> _pledgedGiftsWithDetails = [];
 
   final Repository _repository = Repository();
+  String _errorMessage = '';
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -26,32 +28,39 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
   }
 
   Future<void> _fetchPledgedGifts() async {
-    final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
-    // print('Pledged gifts for user ${widget.userId}: $pledgedGifts');
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
 
-    _pledgedGiftsWithDetails = [];
-    for (var pledgedGift in pledgedGifts) {
-      // print('Fetching gift details for gift docId ${pledgedGift.docId}');
-      final gift = await _repository.getGiftById_For_pledged_Firestore(pledgedGift.giftId);
-      // print('Gift details for gift docId ${pledgedGift.docId}: $gift');
-      // print(pledgedGift.userId);
-      // print(widget.userId);
+      _pledgedGiftsWithDetails = [];
+      for (var pledgedGift in pledgedGifts) {
+        final gift = await _repository.getGiftById_For_pledged_Firestore(pledgedGift.giftId);
 
-      if (gift != null && pledgedGift.userId == widget.userId) {
-        _pledgedGiftsWithDetails.add({
-          'gift': gift,
-          'friendName': pledgedGift.friendName,
-          'dueDate': pledgedGift.dueDate,
-          'docId': pledgedGift.docId,  // Include the docId
+        if (gift != null && pledgedGift.userId == widget.userId) {
+          _pledgedGiftsWithDetails.add({
+            'gift': gift,
+            'friendName': pledgedGift.friendName,
+            'dueDate': pledgedGift.dueDate,
+            'docId': pledgedGift.docId,
+          });
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
         });
-        // print('Added gift: ${gift.name}');
-      } else {
-        // print('Gift is null or does not belong to the user');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
       }
     }
-
-    // print('Pledged gifts with details: $_pledgedGiftsWithDetails');
-    setState(() {});
   }
 
   @override
@@ -63,7 +72,9 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _fetchPledgedGifts,
-        child: _pledgedGiftsWithDetails.isEmpty
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _pledgedGiftsWithDetails.isEmpty
             ? const Center(child: Text('No pledged gifts available.'))
             : ListView.builder(
           itemCount: _pledgedGiftsWithDetails.length,
@@ -110,6 +121,16 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
           },
         ),
       ),
+      bottomNavigationBar: _errorMessage.isNotEmpty
+          ? Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          _errorMessage,
+          style: TextStyle(color: Colors.red),
+          textAlign: TextAlign.center,
+        ),
+      )
+          : null,
     );
   }
 }
