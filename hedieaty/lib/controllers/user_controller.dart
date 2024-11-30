@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -186,7 +187,31 @@ class UserController {
     }
   }
 
+  Future<bool> _isOnline() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    return connectivityResult[0] != ConnectivityResult.none;
+  }
+
   Future<User?> authenticateUser(String email, String password) async {
+    // Check network connectivity
+    if (await _isOnline()) {
+      try {
+        var querySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .where('password', isEqualTo: _hashPassword(password))
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          var userData = querySnapshot.docs.first.data();
+          return User.fromMap(userData);
+        }
+      } catch (e) {
+        // Handle any Firestore errors (e.g., network issues)
+      }
+    }
+
+    // Fallback to local authentication
     final db = await database;
     final hashedPassword = _hashPassword(password);
     final List<Map<String, dynamic>> maps = await db.query(

@@ -1,7 +1,7 @@
 import 'gift.dart';
 
 class Event {
-  final int? id;
+  late int? id;
   final String name;
   final String category;
   final String status;
@@ -10,9 +10,11 @@ class Event {
   final String description;
   final int userId;
   final List<Gift> gifts;
+  String? docId;
 
   Event({
     this.id,
+    required this.docId,
     required this.name,
     required this.category,
     required this.status,
@@ -22,10 +24,11 @@ class Event {
     required this.userId,
     required this.gifts,
   });
-  
+
   factory Event.fromMap(Map<String, dynamic> map) {
     return Event(
       id: map['id'],
+      docId: map['docId'],
       name: map['name'],
       category: map['category'],
       status: map['status'],
@@ -40,6 +43,7 @@ class Event {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'docId': docId,
       'name': name,
       'category': category,
       'status': status,

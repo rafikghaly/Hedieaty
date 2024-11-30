@@ -43,6 +43,7 @@ class DatabaseInitializer {
         await db.execute(
           'CREATE TABLE IF NOT EXISTS events('
           'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'docId TEXT, '
           'name TEXT, '
           'category TEXT, '
           'status TEXT, '

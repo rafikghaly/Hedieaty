@@ -37,6 +37,7 @@ class _EditEventPageState extends State<EditEventPage> {
   void _editEvent() async {
     Event updatedEvent = Event(
       id: widget.event.id,
+      docId: widget.event.docId,
       name: _nameController.text,
       category: _categoryController.text,
       status: _selectedStatus,

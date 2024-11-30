@@ -56,6 +56,7 @@ class SignInPage extends StatelessWidget {
         );
 
         User? user = await _repository.authenticateUser(email, password);
+        print(user);
         if (user != null) {
           await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode); // Save user ID and name
           Navigator.pushReplacement(

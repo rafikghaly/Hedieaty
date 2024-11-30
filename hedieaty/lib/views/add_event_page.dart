@@ -7,7 +7,11 @@ class AddEventPage extends StatefulWidget {
   final int firebaseId;
   final Function(Event) onEventAdded;
 
-  const AddEventPage({super.key, required this.userId, required this.onEventAdded, required this.firebaseId});
+  const AddEventPage(
+      {super.key,
+      required this.userId,
+      required this.onEventAdded,
+      required this.firebaseId});
 
   @override
   _AddEventPageState createState() => _AddEventPageState();
@@ -31,7 +35,7 @@ class _AddEventPageState extends State<AddEventPage> {
     final String date = dateController.text;
 
     Event newEvent = Event(
-      id: 0, // 0 means it will be auto-incremented in the database
+      id: null, // ID is auto-generated in the database
       name: name,
       category: category,
       status: status,
@@ -40,6 +44,7 @@ class _AddEventPageState extends State<AddEventPage> {
       description: description,
       userId: widget.firebaseId, // Use the actual user ID from the parameter
       gifts: [],
+      docId: null,
     );
 
     await _repository.insertEvent(newEvent);
@@ -88,7 +93,8 @@ class _AddEventPageState extends State<AddEventPage> {
                     status = newValue!;
                   });
                 },
-                items: <String>['Upcoming', 'Current', 'Past'].map<DropdownMenuItem<String>>((String value) {
+                items: <String>['Upcoming', 'Current', 'Past']
+                    .map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),

@@ -66,7 +66,6 @@ class Repository {
     if (await _isOnline()) {
       await _userController.deleteUserByFirebaseUidFirestore(firebaseUid);
     }
-    // Consider if local deletion should be allowed only when online or always
     await _userController.deleteUserLocal(firebaseUid.hashCode);
   }
 
@@ -80,9 +79,15 @@ class Repository {
 
   // Event methods
   Future<void> insertEvent(Event event) async {
-    await _eventController.insertEventLocal(event);
+    // Insert event locally to get auto-generated ID
+    int localId = await _eventController.insertEventLocal(event);
+
+    // If online, insert event to Firestore and set Firestore doc ID as event ID
     if (await _isOnline()) {
+      event.id = localId; // Ensure the ID is reset before setting it again
       await _eventController.insertEventFirestore(event);
+    } else {
+      event.id = localId; // Assign the local ID if offline
     }
   }
 
@@ -109,11 +114,11 @@ class Repository {
     }
   }
 
-  Future<void> deleteEvent(int id) async {
+  Future<void> deleteEvent(String id) async {
     if (await _isOnline()) {
       await _eventController.deleteEventFirestore(id);
     }
-    await _eventController.deleteEventLocal(id);
+    //TODO await _eventController.deleteEventLocal(id as int); //TODO Change the id delete into string
   }
 
   // Friend methods

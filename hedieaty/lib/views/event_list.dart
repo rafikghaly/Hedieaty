@@ -88,7 +88,7 @@ class _EventListPageState extends State<EventListPage> {
   }
 
   Future<void> _deleteEvent(Event event) async {
-    await _repository.deleteEvent(event.id!);
+    await _repository.deleteEvent(event.docId!);
     setState(() {
       _events.remove(event);
     });
