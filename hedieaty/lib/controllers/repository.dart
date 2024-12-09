@@ -28,9 +28,9 @@ class Repository {
   }
 
   // User methods
-  Future<void> registerUser(String email, String password, String name, String preferences) async {
+  Future<void> registerUser(String email, String password, String name, String preferences, String phoneNumber) async {
     if (await _isOnline()) {
-      await _userController.registerUser(email, password, name, preferences);
+      await _userController.registerUser(email, password, name, preferences, phoneNumber);
     } else {
       throw Exception("Cannot register user while offline.");
     }
@@ -90,6 +90,14 @@ class Repository {
     } else {
       return await _userController.usersLocal();
     }
+  }
+  Future<User?> getUserByPhoneNumber(String phoneNumber) async {
+    if (await _isOnline()) {
+      return await _userController.getUserByPhoneNumber(phoneNumber);
+    } else{
+      throw Exception("Cannot get user while offline.");
+    }
+    return null;
   }
 
   // Event methods

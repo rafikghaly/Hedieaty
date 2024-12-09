@@ -169,6 +169,7 @@ class UserController {
           .update({
         'name': user.name,
         'email': user.email,
+        'phoneNumber': user.phoneNumber,
       });
       // print('User updated successfully');
 
@@ -217,8 +218,8 @@ class UserController {
     return digest.toString();
   }
 
-  Future<void> registerUser(
-      String email, String password, String name, String preferences) async {
+  Future<void> registerUser(String email, String password, String name,
+      String preferences, String phoneNumber) async {
     final hashedPassword = _hashPassword(password);
 
     try {
@@ -237,6 +238,7 @@ class UserController {
         firebaseUid: firebaseUid,
         name: name,
         email: email,
+        phoneNumber: phoneNumber,
         preferences: preferences,
         password: hashedPassword,
       );
@@ -402,6 +404,22 @@ class UserController {
       var docSnapshot = querySnapshot.docs.first;
       var userData = docSnapshot.data();
       return userData['profileImageBase64'];
+    }
+    return null;
+  }
+
+  Future<User?> getUserByPhoneNumber(String phoneNumber) async {
+    try {
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('phoneNumber', isEqualTo: phoneNumber)
+          .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        var doc = querySnapshot.docs.first;
+        return User.fromMap(doc.data());
+      }
+    } catch (e) {
+      //print('Error getting user by phone number: $e');
     }
     return null;
   }

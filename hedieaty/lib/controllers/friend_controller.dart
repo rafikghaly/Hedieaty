@@ -97,7 +97,7 @@ class FriendController {
     );
 
     await insertFriendLocal(friend1);
-    await insertFriendLocal(friend2);
+    // await insertFriendLocal(friend2);
   }
 
   Future<void> addMutualFriendsFirestore(int userId1, int userId2, String userName1, String userName2) async {
@@ -129,7 +129,7 @@ class FriendController {
     );
 
     await insertFriendFirestore(friend1);
-    await insertFriendFirestore(friend2);
+    // await insertFriendFirestore(friend2);
   }
 
   Future<List<Friend>> friendsLocal(int userId) async {

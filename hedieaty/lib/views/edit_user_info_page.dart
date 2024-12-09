@@ -17,6 +17,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
   late String? _userName;
   late String? _email;
   late String? _preferences;
+  late String? _phoneNumber;
   late String? _password;
   final Repository _repository = Repository();
   final UserController _userController = UserController();
@@ -27,6 +28,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
     _userName = widget.user.name;
     _email = widget.user.email;
     _preferences = widget.user.preferences;
+    _phoneNumber = widget.user.phoneNumber;
     _password = null;
   }
 
@@ -34,7 +36,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      if (_userName == widget.user.name && _email == widget.user.email) {
+      if (_userName == widget.user.name && _email == widget.user.email && _phoneNumber == widget.user.phoneNumber) {
         showDialog(
           context: context,
           builder: (context) {
@@ -77,12 +79,13 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         }
       }
 
-      // Update user information if the name or email is different
+      // Update user information if the name, email, or phone number is different
       final updatedUser = User(
         id: widget.user.id,
         firebaseUid: widget.user.firebaseUid,
         name: _userName ?? widget.user.name,
         email: _email ?? widget.user.email,
+        phoneNumber: _phoneNumber ?? widget.user.phoneNumber,
         preferences: _preferences ?? widget.user.preferences,
         password: _password ?? widget.user.password,
       );
@@ -91,6 +94,35 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
 
       Navigator.pop(context, updatedUser);
     }
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your email';
+    }
+    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    if (!regex.hasMatch(value)) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your phone number';
+    }
+    final regex = RegExp(r'^[0-9]{11}$');
+    if (!regex.hasMatch(value)) {
+      return 'Please enter a valid phone number (e.g., 01234567890)';
+    }
+    return null;
+  }
+
+  String? _validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your name';
+    }
+    return null;
   }
 
   @override
@@ -111,57 +143,73 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Update Your Information',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber[800]),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                initialValue: _userName,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Update Your Information',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber[800]),
                 ),
-                onSaved: (value) {
-                  _userName = value!.isEmpty ? null : value;
-                },
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                initialValue: _email,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                const SizedBox(height: 20),
+                TextFormField(
+                  initialValue: _userName,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                  ),
+                  onSaved: (value) {
+                    _userName = value!.isEmpty ? null : value;
+                  },
+                  validator: _validateName,
                 ),
-                onSaved: (value) {
-                  _email = value!.isEmpty ? null : value;
-                },
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber[800],
-                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(height: 10),
+                TextFormField(
+                  initialValue: _email,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                  ),
+                  onSaved: (value) {
+                    _email = value!.isEmpty ? null : value;
+                  },
+                  validator: _validateEmail,
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  initialValue: _phoneNumber,
+                  decoration: InputDecoration(
+                    labelText: 'Phone Number',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                  ),
+                  onSaved: (value) {
+                    _phoneNumber = value!.isEmpty ? null : value;
+                  },
+                  validator: _validatePhoneNumber,
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber[800],
+                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                    child: const Text(
+                      'Save Changes',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

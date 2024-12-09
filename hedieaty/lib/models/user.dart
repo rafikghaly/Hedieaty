@@ -6,9 +6,11 @@ class User {
   final String preferences;
   String password;
   final String? profileImageBase64;
+  final String? phoneNumber;
 
   User({
     this.id,
+    this.phoneNumber,
     required this.firebaseUid,
     required this.name,
     required this.email,
@@ -23,6 +25,7 @@ class User {
       firebaseUid: map['firebase_uid'],
       name: map['name'],
       email: map['email'],
+      phoneNumber: map['phoneNumber'],
       preferences: map['preferences'],
       password: map['password'],
       profileImageBase64: map['profileImageBase64'],
@@ -35,6 +38,7 @@ class User {
       'firebase_uid': firebaseUid,
       'name': name,
       'email': email,
+      'phoneNumber': phoneNumber,
       'preferences': preferences,
       'password': password,
       'profileImageBase64': profileImageBase64,

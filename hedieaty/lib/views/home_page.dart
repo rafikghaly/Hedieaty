@@ -72,7 +72,10 @@ class _HomePageState extends State<HomePage> {
           User? friendUser = users.firstWhere(
                 (user) => user.id == (friend.userId1 == widget.firebaseId ? friend.userId2 : friend.userId1),
           );
-          return (friendUser.name.toLowerCase().contains(query.toLowerCase()) || friendUser.email.toLowerCase().contains(query.toLowerCase()));
+          String emailWithoutDomain = friendUser.email.split('@')[0];
+          return (friendUser.name.toLowerCase().contains(query.toLowerCase()) ||
+              emailWithoutDomain.toLowerCase().contains(query.toLowerCase()) ||
+              friendUser.phoneNumber?.contains(query) == true);
         }).toList();
       });
     }
@@ -102,38 +105,84 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showAddFriendDialog() {
-    TextEditingController emailController = TextEditingController();
+    TextEditingController contactController = TextEditingController();
+    bool isPhoneNumber = false;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add New Friend'),
-          content: TextField(
-            controller: emailController,
-            decoration: const InputDecoration(
-              hintText: 'Enter friend\'s email',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _addFriendByEmail(emailController.text);
-              },
-              child: const Text('Add'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text('Add New Friend'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: contactController,
+                    decoration: InputDecoration(
+                      hintText: isPhoneNumber ? 'Enter friend\'s phone number' : 'Enter friend\'s email',
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: isPhoneNumber,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            isPhoneNumber = value ?? false;
+                            contactController.clear();
+                          });
+                        },
+                      ),
+                      const Text('Add by phone number'),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    if (isPhoneNumber) {
+                      _addFriendByPhoneNumber(contactController.text);
+                    } else {
+                      _addFriendByEmail(contactController.text);
+                    }
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
+
+  Future<void> _addFriendByPhoneNumber(String phoneNumber) async {
+    User? newUser = await _repository.getUserByPhoneNumber(phoneNumber);
+
+    // Check if the user is trying to add themselves as a friend
+    if (newUser?.id == widget.firebaseId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You cannot add yourself as a friend')),
+      );
+      return;
+    }
+
+    await _repository.addMutualFriends(widget.firebaseId, newUser!.id!, currentUserName, newUser.name);
+
+    // Refresh the friend list
+    _fetchFriends();
+    }
 
   Future<void> _logout(BuildContext context) async {
     //TODO SYNC WHEN MAKING LOCAL EVENT

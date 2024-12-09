@@ -26,6 +26,7 @@ class DatabaseInitializer {
           'firebase_uid TEXT UNIQUE, '
           'name TEXT, '
           'email TEXT, '
+          'phoneNumber TEXT, '
           'preferences TEXT, '
           'password TEXT,'
           'profileImageBase64 TEXT'

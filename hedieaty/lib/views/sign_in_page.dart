@@ -25,13 +25,14 @@ class SignInPage extends StatelessWidget {
   }
 
 
-  Future<void> _saveUserLogin(int userId, String userName, String email,int firebaseId) async {
+  Future<void> _saveUserLogin(int userId, String userName, String email,int firebaseId, String phoneNumber) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId);
     await prefs.setInt('firebaseId', firebaseId);
     await prefs.setString('firebaseUId', firebaseId.toString());
     await prefs.setString('userName', userName);
     await prefs.setString('email', email);
+    await prefs.setString('phoneNumber', phoneNumber);
     await _repository.saveImageToSharedPrefs(firebaseId.toString());
     onUserSignIn(userId);
   }
@@ -46,7 +47,7 @@ class SignInPage extends StatelessWidget {
       // Device is offline, use local authentication
       User? user = await _repository.authenticateUser(email, password);
       if (user != null) {
-        await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode); // Save user ID and name
+        await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode, user.phoneNumber!); // Save user ID and name
         // Show offline login message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Logged in offline. Limited functionality available.')),
@@ -71,7 +72,7 @@ class SignInPage extends StatelessWidget {
         User? user = await _repository.authenticateUser(email, password);
         // print(user);
         if (user != null) {
-          await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode); // Save user ID and name
+          await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode, user.phoneNumber!); // Save user ID and name
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const MainPage()),
@@ -86,7 +87,7 @@ class SignInPage extends StatelessWidget {
         if (e.toString().contains('network error')) {
           User? user = await _repository.authenticateUser(email, password);
           if (user != null) {
-            await _saveUserLogin(user.id!, user.name, user.email,user.firebaseUid.hashCode); // Save user ID and name
+            await _saveUserLogin(user.id!, user.name, user.email,user.firebaseUid.hashCode, user.phoneNumber!); // Save user ID and name
             // Show offline login message
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Logged in offline due to network error. Limited functionality available.')),

@@ -160,7 +160,7 @@ class _EventListPageState extends State<EventListPage> {
                   Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 100.0),
-                      child: Text('No events available. Pull down to refresh.'),
+                      child: Text('No events available.'),
                     ),
                   ),
                 ],

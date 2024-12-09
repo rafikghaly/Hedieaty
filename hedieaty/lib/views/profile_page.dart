@@ -33,9 +33,10 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late String _userName;
   late String _email;
+  late String _phoneNumber;
   late int? _firebaseId;
   late String _firebaseUid;
-  String? _profileImageBase64;
+  late String _profileImageBase64;
 
   final Repository _repository = Repository();
 
@@ -44,6 +45,8 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _userName = '';
     _email = '';
+    _phoneNumber = '';
+    _profileImageBase64 = '';
     _loadUserData();
   }
 
@@ -54,7 +57,8 @@ class _ProfilePageState extends State<ProfilePage> {
       _firebaseUid = prefs.getString('firebaseUId')!;
       _userName = prefs.getString('userName') ?? '';
       _email = prefs.getString('email') ?? '';
-      _profileImageBase64 = prefs.getString('profileImageBase64');
+      _phoneNumber = prefs.getString('phoneNumber') ?? '';
+      _profileImageBase64 = prefs.getString('profileImageBase64') ?? '';
     });
   }
 
@@ -64,6 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
       firebaseUid: _firebaseUid ?? '',
       name: _userName,
       email: _email,
+      phoneNumber: _phoneNumber,
       preferences: 'Default Preferences',
       password: '******',
     );
@@ -79,19 +84,21 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _userName = result.name;
         _email = result.email;
+        _phoneNumber = result.phoneNumber!;
         // Save the updated information to SharedPreferences
-        _saveUserData(result.firebaseUid, result.name, result.email);
+        _saveUserData(result.firebaseUid, result.name, result.email, result.phoneNumber!);
       });
       // Update the user information in the repository
       await _repository.updateUser(result);
     }
   }
 
-  Future<void> _saveUserData(String firebaseUid, String userName, String email) async {
+  Future<void> _saveUserData(String firebaseUid, String userName, String email, String phoneNumber) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('firebaseUid', firebaseUid);
     await prefs.setString('userName', userName);
     await prefs.setString('email', email);
+    await prefs.setString('phoneNumber', phoneNumber);
   }
 
   Future<void> _pickAndSaveImage() async {
@@ -129,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
           .doc(docSnapshot.id)
           .update({'profileImageBase64': base64String});
     } else {
-      print('No user found with firebaseUid: $_firebaseUid');
+      //print('No user found with firebaseUid: $_firebaseUid');
     }
   }
 
@@ -194,6 +201,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               fontWeight: FontWeight.bold,
                               color: Colors.black)),
                       Text(_email,
+                          style:
+                          const TextStyle(fontSize: 16, color: Colors.black45)),
+                      Text(_phoneNumber,
                           style:
                           const TextStyle(fontSize: 16, color: Colors.black45)),
                       const SizedBox(height: 20),
