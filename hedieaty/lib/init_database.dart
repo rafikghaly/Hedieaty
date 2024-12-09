@@ -88,6 +88,33 @@ class DatabaseInitializer {
           'name TEXT'
           ')',
         );
+        await db.execute(
+          'CREATE TABLE IF NOT EXISTS local_events('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'docId TEXT, '
+          'name TEXT, '
+          'category TEXT, '
+          'status TEXT, '
+          'date TEXT, '
+          'location TEXT, '
+          'description TEXT, '
+          'userId INTEGER'
+          ')',
+        );
+        await db.execute(
+          'CREATE TABLE IF NOT EXISTS local_gifts('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'docId TEXT, '
+          'name TEXT, '
+          'description TEXT, '
+          'category TEXT, '
+          'price REAL, '
+          'status TEXT, '
+          'isPledged INTEGER, '
+          'imageUrl TEXT, '
+          'eventId INTEGER'
+          ')',
+        );
       },
     );
   }

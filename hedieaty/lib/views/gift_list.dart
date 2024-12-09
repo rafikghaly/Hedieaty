@@ -54,8 +54,6 @@ class _GiftListPageState extends State<GiftListPage> {
   }
 
   Future<void> _fetchEventUserAndGifts() async {
-    // Get the event and user details
-    // print('Fetching event and user details for eventId ${widget.eventId} and userId ${widget.userId}');
     _event = await _repository.getEventById(widget.eventId);
     _user = await _repository.getUserById(widget.userId);
 
@@ -104,7 +102,7 @@ class _GiftListPageState extends State<GiftListPage> {
       giftId: gift.id ?? 0,
       friendName: _user?.name ?? 'Unknown',
       dueDate: _event?.date ?? 'Unknown',
-      docId: '', // Initialize docId as empty string
+      docId: '',
     );
 
     // print('Pledging gift: $gift with pledgedGift: $pledgedGift');
@@ -118,6 +116,14 @@ class _GiftListPageState extends State<GiftListPage> {
         }
 
     await _repository.updateGift(gift);
+    await _refreshGifts();
+  }
+
+  Future<void> _deleteGift(Gift gift) async {
+    await _repository.deleteGift(gift.docId!);
+    setState(() {
+      _gifts.remove(gift);
+    });
     await _refreshGifts();
   }
 
@@ -190,10 +196,18 @@ class _GiftListPageState extends State<GiftListPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => EditGiftPage(gift: gift),
+                              builder: (context) => EditGiftPage(
+                                gift: gift,
+                                onGiftEdited: (editedGift) => _refreshGifts(),
+                              ),
                             ),
                           ).then((_) => _refreshGifts());
                         },
+                      ),
+                    if (widget.isOwner && !gift.isPledged)
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => _deleteGift(gift),
                       ),
                   ],
                 ),
@@ -208,7 +222,11 @@ class _GiftListPageState extends State<GiftListPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddGiftPage(eventId: widget.eventId, userId: widget.userId),
+              builder: (context) => AddGiftPage(
+                eventId: widget.eventId,
+                userId: widget.userId,
+                isPrivate: false,
+              ),
             ),
           ).then((_) => _refreshGifts());
         },

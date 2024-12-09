@@ -4,8 +4,9 @@ import 'package:hedieaty/controllers/repository.dart';
 
 class EditGiftPage extends StatefulWidget {
   final Gift gift;
+  final Function(Gift) onGiftEdited;
 
-  const EditGiftPage({super.key, required this.gift});
+  const EditGiftPage({super.key, required this.gift, required this.onGiftEdited});
 
   @override
   _EditGiftPageState createState() => _EditGiftPageState();
@@ -48,9 +49,16 @@ class _EditGiftPageState extends State<EditGiftPage> {
         docId: widget.gift.docId,
       );
 
-      await _repository.updateGift(updatedGift);
+      if (updatedGift.docId == null) {
+        // Local gift, update in local database
+        await _repository.updateLocalGiftTable(updatedGift);
+      } else {
+        // Non-local gift, update in Firestore
+        await _repository.updateGift(updatedGift);
+      }
 
-      Navigator.pop(context);
+      widget.onGiftEdited(updatedGift);
+      Navigator.pop(context, true);
     }
   }
 

@@ -5,8 +5,9 @@ import 'package:hedieaty/controllers/repository.dart';
 class AddGiftPage extends StatefulWidget {
   final int eventId;
   final int userId;
+  final bool isPrivate;
 
-  const AddGiftPage({super.key, required this.eventId, required this.userId});
+  const AddGiftPage({super.key, required this.eventId, required this.userId, required this.isPrivate});
 
   @override
   _AddGiftPageState createState() => _AddGiftPageState();
@@ -39,7 +40,11 @@ class _AddGiftPageState extends State<AddGiftPage> {
         docId: null,
       );
 
-      await _repository.insertGift(newGift);
+      if (widget.isPrivate) {
+        await _repository.insertLocalGift(newGift);
+      } else {
+        await _repository.insertGift(newGift);
+      }
 
       Navigator.pop(context);
     }

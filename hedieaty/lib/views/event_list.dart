@@ -4,6 +4,7 @@ import 'gift_list.dart';
 import 'package:hedieaty/controllers/repository.dart';
 import 'add_event_page.dart';
 import 'edit_event_page.dart';
+import 'local_events_page.dart';
 
 class EventListPage extends StatefulWidget {
   final List<Event> events;
@@ -233,6 +234,22 @@ class _EventListPageState extends State<EventListPage> {
           ],
         ),
       ),
+      floatingActionButton: widget.isOwner
+          ? FloatingActionButton(
+        heroTag: 'localEventsFAB',
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LocalEventsPage(userId: widget.userId),
+            ),
+          );
+        },
+        backgroundColor: Colors.amber[500],
+        tooltip: 'My Local Events',
+        child: const Icon(Icons.event_note),
+      )
+          : null,
     );
   }
 }

@@ -24,6 +24,7 @@ class _AddEventPageState extends State<AddEventPage> {
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
   String status = "Upcoming";
+  bool isPrivate = true; // Default to private event
 
   final Repository _repository = Repository();
 
@@ -47,10 +48,20 @@ class _AddEventPageState extends State<AddEventPage> {
       docId: null,
     );
 
-    await _repository.insertEvent(newEvent);
+    if (isPrivate) {
+      await _repository.insertLocalEventTable(newEvent);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Event saved locally.')),
+      );
+    } else {
+      await _repository.insertEvent(newEvent);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Event published.')),
+      );
+    }
     widget.onEventAdded(newEvent); // Notify the parent about the new event
 
-    Navigator.pop(context); // Go back to the previous screen
+    Navigator.pop(context);
   }
 
   @override
@@ -100,6 +111,16 @@ class _AddEventPageState extends State<AddEventPage> {
                     child: Text(value),
                   );
                 }).toList(),
+              ),
+              const SizedBox(height: 10),
+              SwitchListTile(
+                title: const Text('Make event private'),
+                value: isPrivate,
+                onChanged: (bool value) {
+                  setState(() {
+                    isPrivate = value;
+                  });
+                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(

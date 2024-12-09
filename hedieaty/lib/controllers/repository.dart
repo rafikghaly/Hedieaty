@@ -134,6 +134,55 @@ class Repository {
     }
   }
 
+  /// THIS IS ONLY FOR LOCAL_EVENTS TABLE ////////////////////////////////
+  Future<void> insertLocalEventTable(Event event) async {
+    await _eventController.insertLocalEventTable(event);
+  }
+
+  Future<void> updateLocalEventTable(Event event) async {
+    await _eventController.updateLocalEventTable(event);
+  }
+
+  Future<List<Event>> getLocalEventsTable(int userId) async {
+    return await _eventController.getLocalEventsTable(userId: userId);
+  }
+
+  Future<void> deleteLocalEventTable(int id) async {
+    await _eventController.deleteLocalEventTable(id);
+  }
+
+  Future<void> publishEventTable(Event event) async {
+    if (await _isOnline()) {
+      await _eventController.publishLocalEventTable(event);
+    } else {
+      throw Exception("Cannot publish event while offline.");
+    }
+  }
+
+//////////////////////////////////////////////////////////////////////
+
+
+  /// THIS IS ONLY FOR LOCAL_GIFTS TABLE ////////////////////////////////
+
+  // Insert local gift
+  Future<void> insertLocalGift(Gift gift) async {
+    await _giftController.insertGiftLocalTABLE(gift);
+  }
+  // Get local gifts for an event
+  Future<List<Gift>> getLocalGifts(int eventId) async {
+    return await _giftController.getGiftsLocalTABLE(eventId);
+  }
+  // Update local gift
+  Future<void> updateLocalGiftTable(Gift gift) async {
+    await _giftController.updateGiftLocalTABLE(gift); //--------------------->
+  }
+  // Delete local gift
+  Future<void> deleteLocalGiftTable(int giftId) async {
+    await _giftController.deleteGiftLocalTABLE(giftId); //--------------------->
+  }
+/////////////////////////////////////////////////////////////////////////
+
+
   // Friend methods
   Future<void> insertFriend(Friend friend) async {
     if (await _isOnline()) {
@@ -239,7 +288,8 @@ class Repository {
 
   Future<List<PledgedGift>> getPledgedGiftsForUser(int userId) async {
     if (await _isOnline()) {
-      return await _pledgedGiftController.getPledgedGiftsForUserFirestore(userId);
+      return await _pledgedGiftController
+          .getPledgedGiftsForUserFirestore(userId);
     } else {
       return await _pledgedGiftController.getPledgedGiftsForUserLocal(userId);
     }

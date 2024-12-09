@@ -12,17 +12,6 @@ class GiftController {
     return await DatabaseInitializer().database;
   }
 
-  Future<int> insertGiftLocal(Gift gift) async {
-    final db = await database;
-    final giftMap = gift.toMap();
-    giftMap.remove('id'); // Ensure ID is not set for auto-increment
-    return await db.insert(
-      'gifts',
-      giftMap,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
   Future<void> insertGiftFirestore(Gift gift) async {
     final docRef = FirebaseFirestore.instance.collection('gifts').doc();
     gift.docId = docRef.id;
@@ -117,4 +106,71 @@ class GiftController {
   Future<void> deleteGiftFirestore(String docId) async {
     await FirebaseFirestore.instance.collection('gifts').doc(docId).delete();
   }
+
+  ///THIS IS ONLY FOR LOCAL_GIFTS TABLE
+  Future<int> insertGiftLocalTABLE(Gift gift) async {
+    final db = await database;
+    final giftMap = gift.toMap();
+    giftMap.remove('id'); // Ensure ID is not set for auto-increment
+    return await db.insert(
+      'local_gifts',
+      giftMap,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Gift>> getGiftsLocalTABLE(int eventId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'local_gifts',
+      where: 'eventId = ?',
+      whereArgs: [eventId],
+    );
+    return List.generate(maps.length, (i) {
+      return Gift(
+        id: maps[i]['id'],
+        docId: maps[i]['docId'],
+        name: maps[i]['name'],
+        description: maps[i]['description'],
+        category: maps[i]['category'],
+        price: maps[i]['price'],
+        status: maps[i]['status'],
+        isPledged: maps[i]['isPledged'] ==1,
+        imageUrl: maps[i]['imageUrl'],
+        eventId: maps[i]['eventId'],
+      );
+    });
+  }
+
+  Future<void> deleteGiftsForEventLocalTABLE(int eventId) async {
+    final db = await database;
+    await db.delete(
+      'local_gifts',
+      where: 'eventId = ?',
+      whereArgs: [eventId],
+    );
+  }
+
+  Future<void> updateGiftLocalTABLE(Gift gift) async {
+    final db = await database;
+    await db.update(
+      'local_gifts',
+      gift.toMap(),
+      where: 'id = ?',
+      whereArgs: [gift.id],
+    );
+  }
+
+  Future<void> deleteGiftLocalTABLE(int giftId) async {
+    final db = await database;
+    await db.delete(
+      'local_gifts',
+      where: 'id = ?',
+      whereArgs: [giftId],
+    );
+  }
+
+
+
+///////////////////////////////////////////////////////////////////////////////
 }

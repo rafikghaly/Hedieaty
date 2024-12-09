@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/event.dart';
 import '../init_database.dart';
+import '../models/gift.dart';
 import 'gift_controller.dart';
 
 class EventController {
@@ -11,17 +12,6 @@ class EventController {
 
   Future<Database> get database async {
     return await DatabaseInitializer().database;
-  }
-
-  Future<int> insertEventLocal(Event event) async {
-    final db = await database;
-    final eventMap = event.toMap();
-    eventMap.remove('id'); // Ensure ID is not set for auto-increment
-    return await db.insert(
-      'events',
-      eventMap,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
   }
 
   Future<void> insertEventFirestore(Event event) async {
@@ -225,5 +215,91 @@ class EventController {
     }
 
     await eventDoc.delete();
+  }
+
+  ///THIS IS ONLY FOR LOCAL_EVENTS TABLE
+// Insert local event into local_events table
+  Future<int> insertLocalEventTable(Event event) async {
+    final db = await database;
+    final eventMap = event.toMap();
+    eventMap.remove('id'); // Ensure ID is not set for auto-increment
+    return await db.insert(
+      'local_events',
+      eventMap,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Fetch local events from local_events table
+  Future<List<Event>> getLocalEventsTable({required int userId}) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'local_events',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+    return List.generate(maps.length, (i) {
+      return Event(
+        id: maps[i]['id'],
+        docId: maps[i]['docId'],
+        name: maps[i]['name'],
+        category: maps[i]['category'],
+        status: maps[i]['status'],
+        date: maps[i]['date'],
+        location: maps[i]['location'],
+        description: maps[i]['description'],
+        userId: maps[i]['userId'],
+        gifts: [], // Retrieve gifts separately based on eventId
+      );
+    });
+  }
+
+  // Delete local event from local_events table
+  Future<void> deleteLocalEventTable(int id) async {
+    final db = await database;
+    await db.delete(
+      'local_events',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Publish local event to Firestore and delete from local_events table
+  Future<void> publishLocalEventTable(Event event) async {
+    List<Gift> localGifts = await GiftController().getGiftsLocalTABLE(event.id!);
+    final docRef = FirebaseFirestore.instance.collection('events').doc();
+    event.docId = docRef.id;
+    int originalEventId = event.id!;
+    event.id = docRef.id.hashCode; await docRef.set(event.toMap());
+
+    for (Gift localGift in localGifts) {
+      Gift updatedGift = Gift(
+          id: localGift.id,
+          docId: localGift.docId,
+          name: localGift.name,
+          description: localGift.description,
+          category: localGift.category,
+          price: localGift.price,
+          status: localGift.status,
+          isPledged: localGift.isPledged,
+          imageUrl: localGift.imageUrl,
+          eventId: event.id!, // Using the new Firestore event ID
+          );
+      await GiftController().insertGiftFirestore(updatedGift);
+    }
+
+    await deleteLocalEventTable(originalEventId);
+    await GiftController().deleteGiftsForEventLocalTABLE(originalEventId);
+  }
+
+  // Update local event in local_events table
+  Future<void> updateLocalEventTable(Event event) async {
+    final db = await database;
+    await db.update(
+      'local_events',
+      event.toMap(),
+      where: 'id = ?',
+      whereArgs: [event.id],
+    );
   }
 }

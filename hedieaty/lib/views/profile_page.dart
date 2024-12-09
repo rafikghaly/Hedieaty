@@ -3,8 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event.dart';
 import '../models/gift.dart';
 import '../models/user.dart';
-import 'my_pledged_gifts_page.dart';
 import 'gift_list.dart';
+import 'my_pledged_gifts_page.dart';
+import 'local_events_page.dart';
 import 'edit_user_info_page.dart';
 import 'package:hedieaty/controllers/repository.dart';
 
@@ -96,71 +97,63 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage('assets/images/Rafik.jpg'),
-            ),
-            const SizedBox(height: 20),
-            Text(_userName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Text(_email, style: const TextStyle(fontSize: 16, color: Colors.grey)),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _editUserInfo,
-              icon: const Icon(Icons.edit),
-              label: const Text('Edit Personal Information'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (_firebaseId != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MyPledgedGiftsPage(userId: _firebaseId!),
-                    ),
-                  );
-                } else {
-                  // Handle case where firebaseUid is null
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('User ID is not available.')),
-                  );
-                }
-              },
-              child: const Text('My Pledged Gifts'),
-            ),
-            const SizedBox(height: 20),
-            const Text('My Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: widget.userEvents.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: ListTile(
-                    title: Text(widget.userEvents[index].name),
-                    subtitle: Text('${widget.userEvents[index].category} - ${widget.userEvents[index].status}'),
-                    trailing: const Icon(Icons.arrow_forward),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GiftListPage(
-                            eventId: widget.userEvents[index].id!,
-                            userId: widget.userEvents[index].userId,
-                            isOwner: true,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ],
+        child: Center(
+          child: Column(
+            children: [
+              const CircleAvatar(
+                radius: 50,
+                backgroundImage: AssetImage('assets/images/Rafik.jpg'),
+              ),
+              const SizedBox(height: 20),
+              Text(_userName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(_email, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _editUserInfo,
+                icon: const Icon(Icons.edit),
+                label: const Text('Edit Personal Information'),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (_firebaseId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MyPledgedGiftsPage(userId: _firebaseId!),
+                      ),
+                    );
+                  } else {
+                    // Handle case where firebaseUid is null
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User ID is not available.')),
+                    );
+                  }
+                },
+                child: const Text('My Pledged Gifts'),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (_firebaseId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LocalEventsPage(userId: _firebaseId!),
+                      ),
+                    );
+                  } else {
+                    // Handle case where firebaseUid is null
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User ID is not available.')),
+                    );
+                  }
+                },
+                child: const Text('My Private Events'),
+              ),
+
+            ],
+          ),
         ),
       ),
     );
