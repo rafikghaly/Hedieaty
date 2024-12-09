@@ -52,8 +52,11 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
     try {
       await _repository.publishEventTable(event);
       _fetchLocalEvents();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Event published successfully!')),
+      );
     } catch (e) {
-      //print('Error publishing event: $e');
+      // Handle the error
     }
   }
 
@@ -102,7 +105,7 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Local Events',style: TextStyle(color: Colors.white )),
+        title: const Text('My Private Events',style: TextStyle(color: Colors.white )),
         backgroundColor: Colors.amber[700],
         elevation: 10.0,
         shadowColor: Colors.black,

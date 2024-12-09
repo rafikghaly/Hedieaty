@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/gift.dart';
 import 'package:hedieaty/controllers/repository.dart';
@@ -18,8 +19,7 @@ class _EditGiftPageState extends State<EditGiftPage> {
   late String _description;
   late String _category;
   late double _price;
-  late String? _imageUrl;
-
+  late String? _imageBase64;
   final Repository _repository = Repository();
 
   @override
@@ -29,7 +29,7 @@ class _EditGiftPageState extends State<EditGiftPage> {
     _description = widget.gift.description;
     _category = widget.gift.category;
     _price = widget.gift.price;
-    _imageUrl = widget.gift.imageUrl;
+    _imageBase64 = widget.gift.imageUrl;
   }
 
   Future<void> _submitForm() async {
@@ -44,7 +44,7 @@ class _EditGiftPageState extends State<EditGiftPage> {
         category: _category,
         status: widget.gift.status, // Keep existing status
         isPledged: widget.gift.isPledged, // Keep existing pledge status
-        imageUrl: _imageUrl,
+        imageUrl: _imageBase64,
         price: _price,
         docId: widget.gift.docId,
       );
@@ -59,6 +59,15 @@ class _EditGiftPageState extends State<EditGiftPage> {
 
       widget.onGiftEdited(updatedGift);
       Navigator.pop(context, true);
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final imageBase64 = await _repository.pickAndConvertImageToBase64();
+    if (imageBase64 != null) {
+      setState(() {
+        _imageBase64 = imageBase64;
+      });
     }
   }
 
@@ -170,16 +179,12 @@ class _EditGiftPageState extends State<EditGiftPage> {
                   },
                 ),
                 const SizedBox(height: 10),
-                TextFormField(
-                  initialValue: _imageUrl,
-                  decoration: InputDecoration(
-                    labelText: 'Image URL',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-                  ),
-                  onSaved: (value) {
-                    _imageUrl = value;
-                  },
+                TextButton(
+                  onPressed: _pickAndUploadImage,
+                  child: Text(_imageBase64 == null ? 'Upload Image' : 'Change Image'),
                 ),
+                if (_imageBase64 != null)
+                  Image.memory(base64Decode(_imageBase64!)),
                 const SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(

@@ -27,7 +27,8 @@ class DatabaseInitializer {
           'name TEXT, '
           'email TEXT, '
           'preferences TEXT, '
-          'password TEXT'
+          'password TEXT,'
+          'profileImageBase64 TEXT'
           ')',
         );
         await db.execute(

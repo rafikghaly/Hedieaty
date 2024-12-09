@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/gift.dart';
 import 'package:hedieaty/controllers/repository.dart';
 import 'add_gift_page.dart';
 import 'edit_gift_page.dart';
+import 'gift_details_page.dart';
 
 class LocalGiftListPage extends StatefulWidget {
   final int eventId;
@@ -10,7 +12,13 @@ class LocalGiftListPage extends StatefulWidget {
   final bool isPrivate;
   final String eventName;
 
-  const LocalGiftListPage({super.key, required this.eventId, required this.userId, required this.isPrivate, required this.eventName});
+  const LocalGiftListPage({
+    super.key,
+    required this.eventId,
+    required this.userId,
+    required this.isPrivate,
+    required this.eventName,
+  });
 
   @override
   _LocalGiftListPageState createState() => _LocalGiftListPageState();
@@ -97,9 +105,19 @@ class _LocalGiftListPageState extends State<LocalGiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.eventName),
-        backgroundColor: Colors.amber[300],
-        shadowColor: Colors.black45,
+        title: Text(widget.eventName, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.amber[700],
+        elevation: 10.0,
+        shadowColor: Colors.black,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFFFE6B8B), Color(0xFFFF8E53)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _fetchLocalGifts,
@@ -138,24 +156,36 @@ class _LocalGiftListPageState extends State<LocalGiftListPage> {
                   final gift = _localGifts[index];
                   return Card(
                     margin: const EdgeInsets.symmetric(
-                        vertical: 8.0, horizontal: 12.0),
+                      vertical: 8.0,
+                      horizontal: 12.0,
+                    ),
                     elevation: 4.0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15.0),
                     ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(16.0),
-                      leading: Icon(
+                      leading: gift.imageUrl != null
+                          ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image.memory(
+                          base64Decode(gift.imageUrl!),
+                          fit: BoxFit.cover,
+                          width: 50,
+                          height: 50,
+                        ),
+                      )
+                          : Icon(
                         Icons.card_giftcard,
                         size: 40.0,
-                        color: Colors.amber[500],
+                        color: Colors.amber[800],
                       ),
                       title: Text(
                         gift.name,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18.0,
-                          color: Colors.amber[500],
+                          color: Colors.amber[800],
                         ),
                       ),
                       subtitle: Column(
@@ -167,6 +197,14 @@ class _LocalGiftListPageState extends State<LocalGiftListPage> {
                           Text('Status: ${gift.status}'),
                         ],
                       ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GiftDetailsPage(gift: gift),
+                          ),
+                        );
+                      },
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -175,14 +213,12 @@ class _LocalGiftListPageState extends State<LocalGiftListPage> {
                             onPressed: () {
                               _editLocalGift(gift);
                             },
-                            color: Colors.blue,
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),
                             onPressed: () {
                               _deleteLocalGift(gift);
                             },
-                            color: Colors.red,
                           ),
                         ],
                       ),
@@ -196,7 +232,7 @@ class _LocalGiftListPageState extends State<LocalGiftListPage> {
               child: ElevatedButton(
                 onPressed: _addNewGift,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber[500],
+                  backgroundColor: Colors.amber[800],
                   padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
@@ -205,9 +241,10 @@ class _LocalGiftListPageState extends State<LocalGiftListPage> {
                 child: const Text(
                   'Add New Gift',
                   style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

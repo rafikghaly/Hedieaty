@@ -4,6 +4,7 @@ import '../models/friend.dart';
 import '../models/event.dart';
 import 'event_controller.dart';
 import '../init_database.dart';
+import '../models/user.dart'; // Import the User model
 
 class FriendController {
   static final FriendController _instance = FriendController._internal();
@@ -19,7 +20,6 @@ class FriendController {
     await db.insert(
       'friends',
       {
-        'userId1': friend.userId1,
         'userId1': friend.userId1,
         'userId2': friend.userId2,
         'name': friend.name,
@@ -53,21 +53,51 @@ class FriendController {
     return false;
   }
 
+  Future<String> _getUserProfileImage(int userId) async {
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('id', isEqualTo: userId)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      var docSnapshot = querySnapshot.docs.first;
+      var userData = docSnapshot.data();
+      return userData['profileImageBase64'] ?? 'assets/images/profile-default.png';
+    }
+
+    return 'assets/images/profile-default.png';
+  }
+
   Future<void> addMutualFriendsLocal(int userId1, int userId2, String userName1, String userName2) async {
     if (await _friendshipExistsLocal(userId1, userId2)) {
       return;
     }
 
-    Friend friend = Friend(
+    String userProfileImage1 = await _getUserProfileImage(userId1);
+    String userProfileImage2 = await _getUserProfileImage(userId2);
+
+    Friend friend1 = Friend(
       id: null,
       userId1: userId1,
       userId2: userId2,
       name: userName2,
-      picture: 'assets/images/default.jpg',
+      picture: userProfileImage2,
       upcomingEvents: 0,
       events: [],
     );
-    await insertFriendLocal(friend);
+
+    Friend friend2 = Friend(
+      id: null,
+      userId1: userId2,
+      userId2: userId1,
+      name: userName1,
+      picture: userProfileImage1,
+      upcomingEvents: 0,
+      events: [],
+    );
+
+    await insertFriendLocal(friend1);
+    await insertFriendLocal(friend2);
   }
 
   Future<void> addMutualFriendsFirestore(int userId1, int userId2, String userName1, String userName2) async {
@@ -75,16 +105,31 @@ class FriendController {
       return;
     }
 
-    Friend friend = Friend(
+    String userProfileImage1 = await _getUserProfileImage(userId1);
+    String userProfileImage2 = await _getUserProfileImage(userId2);
+
+    Friend friend1 = Friend(
       id: null,
       userId1: userId1,
       userId2: userId2,
       name: userName2,
-      picture: 'assets/images/default.jpg',
+      picture: userProfileImage2,
       upcomingEvents: 0,
       events: [],
     );
-    await insertFriendFirestore(friend);
+
+    Friend friend2 = Friend(
+      id: null,
+      userId1: userId2,
+      userId2: userId1,
+      name: userName1,
+      picture: userProfileImage1,
+      upcomingEvents: 0,
+      events: [],
+    );
+
+    await insertFriendFirestore(friend1);
+    await insertFriendFirestore(friend2);
   }
 
   Future<List<Friend>> friendsLocal(int userId) async {

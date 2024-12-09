@@ -32,6 +32,7 @@ class SignInPage extends StatelessWidget {
     await prefs.setString('firebaseUId', firebaseId.toString());
     await prefs.setString('userName', userName);
     await prefs.setString('email', email);
+    await _repository.saveImageToSharedPrefs(firebaseId.toString());
     onUserSignIn(userId);
   }
 

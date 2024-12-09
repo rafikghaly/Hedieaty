@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -23,8 +26,7 @@ class UserController {
     final db = await database;
     await db.insert(
       'users',
-      user.toMap()
-        ..remove('id'), // Ensure id is not set manually
+      user.toMap()..remove('id'), // Ensure id is not set manually
       conflictAlgorithm: ConflictAlgorithm.fail,
     );
   }
@@ -97,7 +99,6 @@ class UserController {
     }
   }
 
-
   Future<User?> getUserByIdFirestore(int id) async {
     var querySnapshot = await FirebaseFirestore.instance
         .collection('users')
@@ -162,7 +163,8 @@ class UserController {
     if (querySnapshot.docs.isNotEmpty) {
       var docSnapshot = querySnapshot.docs.first;
       // print('User document found: ${docSnapshot.id}');
-      await FirebaseFirestore.instance.collection('users')
+      await FirebaseFirestore.instance
+          .collection('users')
           .doc(docSnapshot.id)
           .update({
         'name': user.name,
@@ -178,9 +180,8 @@ class UserController {
     }
   }
 
-
-  Future<void> _updatePledgedGiftsWithNewUserName(int userId,
-      String newName) async {
+  Future<void> _updatePledgedGiftsWithNewUserName(
+      int userId, String newName) async {
     final db = await database; // Find all events created by this user
     final List<Map<String, dynamic>> eventMaps = await db.query(
       'events',
@@ -216,8 +217,8 @@ class UserController {
     return digest.toString();
   }
 
-  Future<void> registerUser(String email, String password, String name,
-      String preferences) async {
+  Future<void> registerUser(
+      String email, String password, String name, String preferences) async {
     final hashedPassword = _hashPassword(password);
 
     try {
@@ -231,8 +232,7 @@ class UserController {
       String firebaseUid = userCredential.user!.uid;
 
       User newUser = User(
-        id: firebaseUid
-            .hashCode,
+        id: firebaseUid.hashCode,
         // Using Firebase UID's hash as a local ID "So I don't have to change the local structure"
         firebaseUid: firebaseUid,
         name: name,
@@ -310,7 +310,7 @@ class UserController {
 
   Future<List<User>> usersFirestore() async {
     var querySnapshot =
-    await FirebaseFirestore.instance.collection('users').get();
+        await FirebaseFirestore.instance.collection('users').get();
     return querySnapshot.docs.map((doc) => User.fromMap(doc.data())).toList();
   }
 
@@ -323,7 +323,10 @@ class UserController {
 
     for (var doc in querySnapshot.docs) {
       // print('Friend document found: ${doc.id}');
-      await FirebaseFirestore.instance.collection('friends').doc(doc.id).update({
+      await FirebaseFirestore.instance
+          .collection('friends')
+          .doc(doc.id)
+          .update({
         'name': newName,
       });
       // print('Friend updated successfully');
@@ -343,7 +346,10 @@ class UserController {
 
       for (var doc in querySnapshot.docs) {
         // print('Pledged gift document found: ${doc.id}');
-        await FirebaseFirestore.instance.collection('pledged_gifts').doc(doc.id).update({
+        await FirebaseFirestore.instance
+            .collection('pledged_gifts')
+            .doc(doc.id)
+            .update({
           'friendName': newName,
         });
         // print('Pledged gift updated successfully');
@@ -358,11 +364,45 @@ class UserController {
         .where('userId', isEqualTo: userId)
         .get();
 
-    List<int> eventIds = querySnapshot.docs.map((doc) => doc['id'] as int).toList();
+    List<int> eventIds =
+        querySnapshot.docs.map((doc) => doc['id'] as int).toList();
     // print('Event IDs for userId: $eventIds');
     return eventIds;
   }
 
+  Future<void> retrieveAndSaveProfileImage(String firebaseUid) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
+    int userIntID = int.parse(firebaseUid);
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('id', isEqualTo: userIntID)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      var docSnapshot = querySnapshot.docs.first;
+      var userData = docSnapshot.data();
+      String? profileImageBase64 = userData['profileImageBase64'];
+
+      if (profileImageBase64 != null) {
+        await prefs.setString('profileImageBase64', profileImageBase64);
+      }
+    } else {
+      //print('No user found with firebaseUid: $firebaseUid');
+    }
+  }
+
+  Future<String?> getUserProfileImage(int userId) async {
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('id', isEqualTo: userId)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      var docSnapshot = querySnapshot.docs.first;
+      var userData = docSnapshot.data();
+      return userData['profileImageBase64'];
+    }
+    return null;
+  }
 }
-

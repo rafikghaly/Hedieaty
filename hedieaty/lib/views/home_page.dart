@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -249,21 +250,38 @@ class FriendFrame extends StatelessWidget {
     return friendUser?.name ?? 'Unknown';
   }
 
+  Future<String?> _fetchFriendProfileImage(int friendUserId) async {
+    return await _repository.getUserProfileImage(friendUserId);
+  }
+
   @override
   Widget build(BuildContext context) {
     int friendUserId = friend.userId1 == userId ? friend.userId2 : friend.userId1;
 
-    return FutureBuilder<String>(
-      future: _fetchFriendName(friendUserId),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: Future.wait([
+        _fetchFriendName(friendUserId),
+        _fetchFriendProfileImage(friendUserId)
+      ]).then((results) {
+        return {
+          'friendName': results[0] as String,
+          'friendProfileImage': results[1]
+        };
+      }),
       builder: (context, snapshot) {
         String friendName = 'Loading...';
+        String? friendProfileImage;
+
         if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-          friendName = snapshot.data!;
+          friendName = snapshot.data!['friendName'];
+          friendProfileImage = snapshot.data!['friendProfileImage'];
         }
 
         return ListTile(
           leading: CircleAvatar(
-            backgroundImage: AssetImage(friend.picture),
+            backgroundImage: friendProfileImage != null
+                ? MemoryImage(base64Decode(friendProfileImage))
+                : const AssetImage('assets/images/profile-default.png'),
           ),
           title: Text(
             friendName,

@@ -32,6 +32,7 @@ class _EventListPageState extends State<EventListPage> {
   void initState() {
     super.initState();
     _events = widget.events;
+    _refreshEvents();
   }
 
   void _sortEvents(String sortOption) {
@@ -52,6 +53,14 @@ class _EventListPageState extends State<EventListPage> {
     setState(() {
       _events = updatedEvents;
     });
+  }
+
+  Future<void> _navigateToPageAndRefresh(BuildContext context, Widget page) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
+    _refreshEvents();
   }
 
   void _addNewEvent() async {
@@ -102,7 +111,7 @@ class _EventListPageState extends State<EventListPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Event List',style: TextStyle(color: Colors.white )),
+        title: const Text('Event List', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[500],
         elevation: 10.0,
         shadowColor: Colors.black,
@@ -146,78 +155,90 @@ class _EventListPageState extends State<EventListPage> {
             ),
             Expanded(
               child: _events.isEmpty
-                  ? const Center(child: Text('No events available.'))
+                  ? ListView(
+                children: const [
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 100.0),
+                      child: Text('No events available. Pull down to refresh.'),
+                    ),
+                  ),
+                ],
+              )
                   : ListView.builder(
-                      itemCount: _events.length,
-                      itemBuilder: (context, index) {
-                        final event = _events[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 12.0),
-                          elevation: 4.0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16.0),
-                            leading: Icon(
-                              Icons.event,
-                              size: 40.0,
-                              color: Colors.amber[800],
-                            ),
-                            title: Text(
-                              event.name,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18.0,
-                                color: Colors.amber[800],
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Category: ${event.category}'),
-                                Text('Status: ${event.status}'),
-                                Text('Date: ${event.date}'),
-                                Text('Location: ${event.location}'),
-                                Text('Description: ${event.description}'),
-                              ],
-                            ),
-                            trailing: widget.isOwner
-                                ? Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit),
-                                        onPressed: () {
-                                          _editEvent(event);
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete),
-                                        onPressed: () {
-                                          _deleteEvent(event);
-                                        },
-                                      ),
-                                    ],
-                                  )
-                                : null,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => GiftListPage(
-                                      eventId: event.id!,
-                                      userId: widget.userId,isOwner: widget.isOwner, eventName: event.name,),
-                                ),
-                              );
+                itemCount: _events.length,
+                itemBuilder: (context, index) {
+                  final event = _events[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 12.0),
+                    elevation: 4.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16.0),
+                      leading: Icon(
+                        Icons.event,
+                        size: 40.0,
+                        color: Colors.amber[800],
+                      ),
+                      title: Text(
+                        event.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18.0,
+                          color: Colors.amber[800],
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Category: ${event.category}'),
+                          Text('Status: ${event.status}'),
+                          Text('Date: ${event.date}'),
+                          Text('Location: ${event.location}'),
+                          Text('Description: ${event.description}'),
+                        ],
+                      ),
+                      trailing: widget.isOwner
+                          ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                              _editEvent(event);
                             },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              _deleteEvent(event);
+                            },
+                          ),
+                        ],
+                      )
+                          : null,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GiftListPage(
+                              eventId: event.id!,
+                              userId: widget.userId,
+                              isOwner: widget.isOwner,
+                              eventName: event.name,
+                            ),
                           ),
                         );
                       },
                     ),
+                  );
+                },
+              ),
             ),
-            if (widget.isOwner) ...[
+            if (widget.isOwner)
               Padding(
                 padding: const EdgeInsets.all(17),
                 child: ElevatedButton(
@@ -226,18 +247,17 @@ class _EventListPageState extends State<EventListPage> {
                     backgroundColor: Colors.amber[800],
                     padding: const EdgeInsets.symmetric(
                         horizontal: 50, vertical: 15),
-
                   ),
                   child: const Text(
                     'Add New Event',
                     style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ],
           ],
         ),
       ),
@@ -245,16 +265,11 @@ class _EventListPageState extends State<EventListPage> {
           ? FloatingActionButton(
         heroTag: 'localEventsFAB',
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LocalEventsPage(userId: widget.userId),
-            ),
-          );
+          _navigateToPageAndRefresh(context, LocalEventsPage(userId: widget.userId));
         },
         backgroundColor: Colors.amber[800],
         tooltip: 'My Local Events',
-        child: const Icon(Icons.event_note,color: Colors.white,),
+        child: const Icon(Icons.event_note, color: Colors.white),
       )
           : null,
     );

@@ -5,6 +5,7 @@ class User {
   final String email;
   final String preferences;
   String password;
+  final String? profileImageBase64;
 
   User({
     this.id,
@@ -13,6 +14,7 @@ class User {
     required this.email,
     required this.preferences,
     required this.password,
+    this.profileImageBase64,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
@@ -23,6 +25,7 @@ class User {
       email: map['email'],
       preferences: map['preferences'],
       password: map['password'],
+      profileImageBase64: map['profileImageBase64'],
     );
   }
 
@@ -34,6 +37,7 @@ class User {
       'email': email,
       'preferences': preferences,
       'password': password,
+      'profileImageBase64': profileImageBase64,
     };
   }
 }

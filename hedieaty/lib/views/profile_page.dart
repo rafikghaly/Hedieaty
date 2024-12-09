@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/event.dart';
 import '../models/gift.dart';
 import '../models/user.dart';
@@ -31,6 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
   late String _email;
   late int? _firebaseId;
   late String _firebaseUid;
+  String? _profileImageBase64;
 
   final Repository _repository = Repository();
 
@@ -49,6 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
       _firebaseUid = prefs.getString('firebaseUId')!;
       _userName = prefs.getString('userName') ?? '';
       _email = prefs.getString('email') ?? '';
+      _profileImageBase64 = prefs.getString('profileImageBase64');
     });
   }
 
@@ -88,6 +94,45 @@ class _ProfilePageState extends State<ProfilePage> {
     await prefs.setString('email', email);
   }
 
+  Future<void> _pickAndSaveImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final File file = File(pickedFile.path);
+      final bytes = await file.readAsBytes();
+      final base64String = base64Encode(bytes);
+      setState(() {
+        _profileImageBase64 = base64String;
+      });
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profileImageBase64', base64String);
+
+      // Save to Firestore Database
+      await _saveProfileImageToFirestore(base64String);
+    }
+  }
+
+  Future<void> _saveProfileImageToFirestore(String base64String) async {
+    int userIntID = int.parse(_firebaseUid);
+
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('id', isEqualTo: userIntID)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      var docSnapshot = querySnapshot.docs.first;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(docSnapshot.id)
+          .update({'profileImageBase64': base64String});
+    } else {
+      print('No user found with firebaseUid: $_firebaseUid');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,113 +154,135 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       body: SizedBox(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Column(
-                  children: [
-                    const CircleAvatar(
-                      radius: 50,
-                      backgroundImage: AssetImage('assets/images/Rafik.jpg'),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(_userName,
-                        style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black)),
-                    Text(_email,
-                        style:
-                        const TextStyle(fontSize: 16, color: Colors.black45)),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: _editUserInfo,
-                      icon: const Icon(Icons.edit, color: Colors.white),
-                      label: const Text('Edit Personal Information',
-                          style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrangeAccent[100],
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 30, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 40), // Added extra space to push buttons down
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_firebaseId != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  MyPledgedGiftsPage(userId: _firebaseId!),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: _pickAndSaveImage,
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage: _profileImageBase64 != null
+                                  ? MemoryImage(base64Decode(_profileImageBase64!))
+                                  : const AssetImage('assets/images/profile-default.png') as ImageProvider,
                             ),
-                          );
-                        } else {
-                          // Handle case where firebaseUid is null
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('User ID is not available.')),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrangeAccent[100],
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 30, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                      ),
-                      child: const Text('My Pledged Gifts',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_firebaseId != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  LocalEventsPage(userId: _firebaseId!),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                                onPressed: _pickAndSaveImage,
+                                padding: const EdgeInsets.all(0),
+                                constraints: const BoxConstraints(),
+                                color: Colors.grey,
+                              ),
                             ),
-                          );
-                        } else {
-                          // Handle case where firebaseUid is null
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('User ID is not available.')),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrangeAccent[100],
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 30, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+                          ],
                         ),
                       ),
-                      child: const Text('My Private Events',
-                          style: TextStyle(
-                              fontSize: 16,
+                      const SizedBox(height: 20),
+                      Text(_userName,
+                          style: const TextStyle(
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                    ),
-                  ],
+                              color: Colors.black)),
+                      Text(_email,
+                          style:
+                          const TextStyle(fontSize: 16, color: Colors.black45)),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: _editUserInfo,
+                        icon: const Icon(Icons.edit, color: Colors.white),
+                        label: const Text('Edit Personal Information',
+                            style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepOrangeAccent[100],
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 40), // Added extra space to push buttons down
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_firebaseId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    MyPledgedGiftsPage(userId: _firebaseId!),
+                              ),
+                            );
+                          } else {
+                            // Handle case where firebaseUid is null
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('User ID is not available.')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepOrangeAccent[100],
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        child: const Text('My Pledged Gifts',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_firebaseId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    LocalEventsPage(userId: _firebaseId!),
+                              ),
+                            );
+                          } else {
+                            // Handle case where firebaseUid is null
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('User ID is not available.')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepOrangeAccent[100],
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        child: const Text('My Private Events',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

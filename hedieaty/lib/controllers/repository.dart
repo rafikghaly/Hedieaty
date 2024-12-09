@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../models/event.dart';
 import '../models/friend.dart';
@@ -311,5 +316,33 @@ class Repository {
       throw Exception("Cannot delete pledged gift while offline.");
     }
     //TODO await _pledgedGiftController.deletePledgedGiftLocal(id);//TODO Change the id delete into string
+  }
+
+  Future<void> saveImageToSharedPrefs(String firebaseUid) async{
+    if (await _isOnline()) {
+      await _userController.retrieveAndSaveProfileImage(firebaseUid);
+    } else{
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profileImageBase64', "null");
+    }
+  }
+
+  Future<String?> getUserProfileImage(int userId) async {
+    if (await _isOnline()) {
+      return await _userController.getUserProfileImage(userId);
+    }
+    return null;
+  }
+
+  Future<String?> pickAndConvertImageToBase64() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final File file = File(pickedFile.path);
+      final bytes = await file.readAsBytes();
+      return base64Encode(bytes);
+    }
+    return null;
   }
 }

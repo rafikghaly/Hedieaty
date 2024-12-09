@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/gift.dart';
@@ -7,6 +8,7 @@ import '../models/user.dart';
 import 'package:hedieaty/controllers/repository.dart';
 import 'add_gift_page.dart';
 import 'edit_gift_page.dart';
+import 'gift_details_page.dart';
 
 class GiftListPage extends StatefulWidget {
   final int eventId;
@@ -87,7 +89,7 @@ class _GiftListPageState extends State<GiftListPage> {
         if (pledgedUser != null) {
           _pledgedUserNames[gift.id!] = pledgedUser.name;
         }
-            }
+      }
     }
 
     // print('Fetched gifts: $_gifts');
@@ -117,7 +119,7 @@ class _GiftListPageState extends State<GiftListPage> {
       final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
       final giftToDelete = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
       await _repository.deletePledgedGift(giftToDelete.docId ?? '');
-        }
+    }
 
     await _repository.updateGift(gift);
     await _refreshGifts();
@@ -140,7 +142,7 @@ class _GiftListPageState extends State<GiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_eventName,style: TextStyle(color: Colors.white )),
+        title: Text(_eventName, style: const TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[700],
         elevation: 10.0,
         shadowColor: Colors.black,
@@ -173,7 +175,14 @@ class _GiftListPageState extends State<GiftListPage> {
               color: gift.isPledged ? Colors.lightGreen[100] : null,
               child: ListTile(
                 contentPadding: const EdgeInsets.all(16.0),
-                leading: Icon(
+                leading: gift.imageUrl != null
+                    ? Image.memory(
+                  base64Decode(gift.imageUrl!),
+                  fit: BoxFit.cover,
+                  width: 50,
+                  height: 50,
+                )
+                    : Icon(
                   Icons.card_giftcard,
                   size: 40.0,
                   color: Colors.amber[800],
@@ -195,6 +204,14 @@ class _GiftListPageState extends State<GiftListPage> {
                     if (gift.isPledged) Text('Pledged by: $pledgedUserName'),
                   ],
                 ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GiftDetailsPage(gift: gift),
+                    ),
+                  );
+                },
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -202,9 +219,12 @@ class _GiftListPageState extends State<GiftListPage> {
                       ElevatedButton(
                         onPressed: () => _pledgeGift(gift),
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber[800],
+                          backgroundColor: Colors.amber[800],
                         ),
-                            child: const Text('Pledge',style: TextStyle(color: Colors.white),),
+                        child: const Text(
+                          'Pledge',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     const SizedBox(width: 8.0),
                     if (widget.isOwner && !gift.isPledged)

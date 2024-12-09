@@ -106,7 +106,6 @@ class GiftController {
   Future<void> deleteGiftFirestore(String docId) async {
     await FirebaseFirestore.instance.collection('gifts').doc(docId).delete();
   }
-
   ///THIS IS ONLY FOR LOCAL_GIFTS TABLE
   Future<int> insertGiftLocalTABLE(Gift gift) async {
     final db = await database;

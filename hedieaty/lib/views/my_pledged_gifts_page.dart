@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/gift.dart';
+import 'gift_details_page.dart';
 import 'package:hedieaty/controllers/repository.dart';
 
 class MyPledgedGiftsPage extends StatefulWidget {
@@ -93,7 +95,6 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
             final gift = _pledgedGiftsWithDetails[index]['gift'] as Gift;
             final friendName = _pledgedGiftsWithDetails[index]['friendName'] as String;
             final dueDate = _pledgedGiftsWithDetails[index]['dueDate'] as String;
-            final docId = _pledgedGiftsWithDetails[index]['docId'] as String;
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
@@ -104,7 +105,17 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
               color: Colors.lightGreen[100],
               child: ListTile(
                 contentPadding: const EdgeInsets.all(16.0),
-                leading: Icon(
+                leading: gift.imageUrl != null
+                    ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Image.memory(
+                    base64Decode(gift.imageUrl!),
+                    fit: BoxFit.cover,
+                    width: 50,
+                    height: 50,
+                  ),
+                )
+                    : Icon(
                   Icons.card_giftcard,
                   size: 40.0,
                   color: Colors.amber[800],
@@ -127,6 +138,14 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                     Text('Due Date: $dueDate'),
                   ],
                 ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GiftDetailsPage(gift: gift),
+                    ),
+                  );
+                },
               ),
             );
           },
