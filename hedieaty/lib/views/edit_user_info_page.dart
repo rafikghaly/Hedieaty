@@ -98,31 +98,68 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit User Information'),
+        backgroundColor: Colors.amber[700],
+        elevation: 10.0,
+        shadowColor: Colors.black,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFFFE6B8B), Color(0xFFFF8E53)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'Update Your Information',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber[800]),
+              ),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _userName,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
                 onSaved: (value) {
                   _userName = value!.isEmpty ? null : value;
                 },
               ),
+              const SizedBox(height: 10),
               TextFormField(
                 initialValue: _email,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
                 onSaved: (value) {
                   _email = value!.isEmpty ? null : value;
                 },
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: const Text('Save Changes'),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber[800],
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'Save Changes',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
               ),
             ],
           ),

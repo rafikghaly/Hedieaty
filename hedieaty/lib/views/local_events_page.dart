@@ -102,9 +102,19 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Local Events'),
-        backgroundColor: Colors.amber[300],
-        shadowColor: Colors.black45,
+        title: const Text('My Local Events',style: TextStyle(color: Colors.white )),
+        backgroundColor: Colors.amber[700],
+        elevation: 10.0,
+        shadowColor: Colors.black,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFFFE6B8B), Color(0xFFFF8E53)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _fetchLocalEvents,
@@ -153,14 +163,14 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
                       leading: Icon(
                         Icons.event,
                         size: 40.0,
-                        color: Colors.amber[500],
+                        color: Colors.amber[800],
                       ),
                       title: Text(
                         event.name,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18.0,
-                          color: Colors.amber[500],
+                          color: Colors.amber[800],
                         ),
                       ),
                       subtitle: Column(
@@ -181,19 +191,17 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
                             onPressed: () {
                               _editLocalEvent(event);
                             },
-                            color: Colors.blue,
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),
                             onPressed: () {
                               _deleteLocalEvent(event);
                             },
-                            color: Colors.red,
                           ),
                           ElevatedButton(
                             onPressed: () => _publishEvent(event),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber[500],
+                              backgroundColor: Colors.amber[800],
                             ),
                             child: const Text('Publish',style: TextStyle(color: Colors.white),),
                           ),
@@ -205,7 +213,7 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
                           MaterialPageRoute(
                             builder: (context) => LocalGiftListPage(
                               eventId: event.id!,
-                              isPrivate: true, userId: widget.userId,
+                              isPrivate: true, userId: widget.userId, eventName: event.name,
                             ),
                           ),
                         );
@@ -216,11 +224,11 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(17),
               child: ElevatedButton(
                 onPressed: _addNewEvent,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber[500],
+                  backgroundColor: Colors.amber[800],
                   padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),

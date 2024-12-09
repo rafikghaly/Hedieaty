@@ -8,8 +8,9 @@ class LocalGiftListPage extends StatefulWidget {
   final int eventId;
   final int userId;
   final bool isPrivate;
+  final String eventName;
 
-  const LocalGiftListPage({super.key, required this.eventId, required this.userId, required this.isPrivate});
+  const LocalGiftListPage({super.key, required this.eventId, required this.userId, required this.isPrivate, required this.eventName});
 
   @override
   _LocalGiftListPageState createState() => _LocalGiftListPageState();
@@ -96,7 +97,7 @@ class _LocalGiftListPageState extends State<LocalGiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Local Gifts'),
+        title: Text(widget.eventName),
         backgroundColor: Colors.amber[300],
         shadowColor: Colors.black45,
       ),

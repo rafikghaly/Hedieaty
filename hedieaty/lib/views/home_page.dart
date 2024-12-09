@@ -155,6 +155,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.amber[300],
         shadowColor: Colors.black45,
         elevation: 20,
@@ -162,18 +163,29 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => _logout(context),
+            color: Colors.white,
           ),
         ],
         title: Row(
           children: [
             Image.asset(
-              'assets/images/Logo.png',
+              'assets/images/Logo-White.png',
               height: 40,
             ),
           ],
         ),
         centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFFFE6B8B), Color(0xFFFF8E53)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
       ),
+
       body: RefreshIndicator(
         onRefresh: _fetchFriends,
         child: Column(
@@ -212,9 +224,9 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddFriendDialog,
-        backgroundColor: Colors.amber[300],
-        icon: const Icon(Icons.person_add),
-        label: const Text('New Friend'),
+        backgroundColor: Colors.amber[800],
+        icon: const Icon(Icons.person_add,color: Colors.white,),
+        label: const Text('New Friend',style: TextStyle(color: Colors.white),),
       ),
     );
   }
@@ -265,7 +277,7 @@ class FriendFrame extends StatelessWidget {
           trailing: friend.upcomingEvents > 0
               ? Text(
             friend.upcomingEvents.toString(),
-            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold),
           )
               : null,
           onTap: () async {

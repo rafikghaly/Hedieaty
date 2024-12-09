@@ -54,16 +54,37 @@ class _AddGiftPageState extends State<AddGiftPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Gift'),
+        title: const Text('Add Gift', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.amber[700],
+        elevation: 10.0,
+        shadowColor: Colors.black,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFFFE6B8B), Color(0xFFFF8E53)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'Add a New Gift !',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber[800]),
+              ),
+              const SizedBox(height: 20),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a name';
@@ -74,8 +95,12 @@ class _AddGiftPageState extends State<AddGiftPage> {
                   _name = value!;
                 },
               ),
+              const SizedBox(height: 10),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration: InputDecoration(
+                  labelText: 'Description',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a description';
@@ -86,8 +111,12 @@ class _AddGiftPageState extends State<AddGiftPage> {
                   _description = value!;
                 },
               ),
+              const SizedBox(height: 10),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a category';
@@ -98,8 +127,12 @@ class _AddGiftPageState extends State<AddGiftPage> {
                   _category = value!;
                 },
               ),
+              const SizedBox(height: 10),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Price'),
+                decoration: InputDecoration(
+                  labelText: 'Price',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -111,16 +144,31 @@ class _AddGiftPageState extends State<AddGiftPage> {
                   _price = double.parse(value!);
                 },
               ),
+              const SizedBox(height: 10),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Image URL'),
+                decoration: InputDecoration(
+                  labelText: 'Image URL',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
                 onSaved: (value) {
                   _imageUrl = value;
                 },
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: const Text('Add Gift'),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber[800],
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0)),
+                  ),
+                  child: const Text(
+                    'Add Gift',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
               ),
             ],
           ),

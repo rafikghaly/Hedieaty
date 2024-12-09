@@ -13,6 +13,7 @@ class GiftListPage extends StatefulWidget {
   final int userId;
   final bool showPledgedGifts;
   final bool isOwner;
+  final String eventName;
 
   const GiftListPage({
     super.key,
@@ -20,6 +21,7 @@ class GiftListPage extends StatefulWidget {
     required this.userId,
     this.showPledgedGifts = false,
     required this.isOwner,
+    required this.eventName,
   });
 
   @override
@@ -31,6 +33,7 @@ class _GiftListPageState extends State<GiftListPage> {
   late final Map<int, String> _pledgedUserNames = {};
   Event? _event;
   User? _user;
+  late final String _eventName;
   late String _userName;
   late String _email;
   int? _userId;
@@ -42,6 +45,7 @@ class _GiftListPageState extends State<GiftListPage> {
     super.initState();
     _fetchEventUserAndGifts();
     _loadUserData();
+    _eventName = widget.eventName;
   }
 
   Future<void> _loadUserData() async {
@@ -136,8 +140,19 @@ class _GiftListPageState extends State<GiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gift List'),
-        backgroundColor: Colors.amber[300],
+        title: Text(_eventName,style: TextStyle(color: Colors.white )),
+        backgroundColor: Colors.amber[700],
+        elevation: 10.0,
+        shadowColor: Colors.black,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFFFE6B8B), Color(0xFFFF8E53)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _refreshGifts,
@@ -161,7 +176,7 @@ class _GiftListPageState extends State<GiftListPage> {
                 leading: Icon(
                   Icons.card_giftcard,
                   size: 40.0,
-                  color: Colors.amber[500],
+                  color: Colors.amber[800],
                 ),
                 title: Text(
                   gift.name,
@@ -186,7 +201,10 @@ class _GiftListPageState extends State<GiftListPage> {
                     if (!widget.isOwner && !gift.isPledged)
                       ElevatedButton(
                         onPressed: () => _pledgeGift(gift),
-                        child: const Text('Pledge'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber[800],
+                        ),
+                            child: const Text('Pledge',style: TextStyle(color: Colors.white),),
                       ),
                     const SizedBox(width: 8.0),
                     if (widget.isOwner && !gift.isPledged)
@@ -230,7 +248,7 @@ class _GiftListPageState extends State<GiftListPage> {
             ),
           ).then((_) => _refreshGifts());
         },
-        backgroundColor: Colors.amber[500],
+        backgroundColor: Colors.amber[800],
         child: const Icon(Icons.add),
       )
           : null,

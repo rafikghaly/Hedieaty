@@ -101,9 +101,20 @@ class _EventListPageState extends State<EventListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Event List'),
-        backgroundColor: Colors.amber[300],
-        shadowColor: Colors.black45,
+        automaticallyImplyLeading: false,
+        title: const Text('Event List',style: TextStyle(color: Colors.white )),
+        backgroundColor: Colors.amber[500],
+        elevation: 10.0,
+        shadowColor: Colors.black,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFFFE6B8B), Color(0xFFFF8E53)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _refreshEvents, // Trigger the refresh when the list is pulled down
@@ -152,14 +163,14 @@ class _EventListPageState extends State<EventListPage> {
                             leading: Icon(
                               Icons.event,
                               size: 40.0,
-                              color: Colors.amber[500],
+                              color: Colors.amber[800],
                             ),
                             title: Text(
                               event.name,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18.0,
-                                color: Colors.amber[500],
+                                color: Colors.amber[800],
                               ),
                             ),
                             subtitle: Column(
@@ -181,14 +192,12 @@ class _EventListPageState extends State<EventListPage> {
                                         onPressed: () {
                                           _editEvent(event);
                                         },
-                                        color: Colors.blue,
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.delete),
                                         onPressed: () {
                                           _deleteEvent(event);
                                         },
-                                        color: Colors.red,
                                       ),
                                     ],
                                   )
@@ -199,7 +208,7 @@ class _EventListPageState extends State<EventListPage> {
                                 MaterialPageRoute(
                                   builder: (context) => GiftListPage(
                                       eventId: event.id!,
-                                      userId: widget.userId,isOwner: widget.isOwner,),
+                                      userId: widget.userId,isOwner: widget.isOwner, eventName: event.name,),
                                 ),
                               );
                             },
@@ -210,16 +219,14 @@ class _EventListPageState extends State<EventListPage> {
             ),
             if (widget.isOwner) ...[
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(17),
                 child: ElevatedButton(
                   onPressed: _addNewEvent,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber[500],
+                    backgroundColor: Colors.amber[800],
                     padding: const EdgeInsets.symmetric(
                         horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
+
                   ),
                   child: const Text(
                     'Add New Event',
@@ -245,9 +252,9 @@ class _EventListPageState extends State<EventListPage> {
             ),
           );
         },
-        backgroundColor: Colors.amber[500],
+        backgroundColor: Colors.amber[800],
         tooltip: 'My Local Events',
-        child: const Icon(Icons.event_note),
+        child: const Icon(Icons.event_note,color: Colors.white,),
       )
           : null,
     );

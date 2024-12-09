@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/event.dart';
 import '../init_database.dart';
@@ -55,7 +56,7 @@ class EventController {
       var gifts = await GiftController().giftsFirestore(data['id']);
       return Event(
         id: data['id'],
-        docId: doc.id, // Add docId here
+        docId: doc.id,
         name: data['name'],
         category: data['category'],
         date: data['date'],
@@ -81,7 +82,7 @@ class EventController {
     return List.generate(maps.length, (i) {
       return Event(
         id: maps[i]['id'],
-        docId: maps[i]['docId'], // Add docId here
+        docId: maps[i]['docId'],
         name: maps[i]['name'],
         category: maps[i]['category'],
         status: maps[i]['status'],
@@ -96,11 +97,12 @@ class EventController {
 
   Future<List<Event>> eventsFirestore({required int userId}) async {
     var querySnapshot = await FirebaseFirestore.instance.collection('events').where('userId', isEqualTo: userId).get();
-    return querySnapshot.docs.map((doc) {
+    List<Event> events = [];
+    for (var doc in querySnapshot.docs) {
       var data = doc.data();
-      return Event(
+      var event = Event(
         id: data['id'],
-        docId: doc.id, // Add docId here
+        docId: doc.id,
         name: data['name'],
         category: data['category'],
         status: data['status'],
@@ -110,7 +112,39 @@ class EventController {
         userId: data['userId'],
         gifts: [], // Retrieve gifts separately based on eventId
       );
-    }).toList();
+      await updateEventStatus(event);
+      events.add(event);
+    }
+    return events;
+  }
+
+  Future<void> updateEventStatus(Event event) async {
+    try {
+      final now = DateTime.now();
+      final dateFormat = DateFormat('yyyy-MM-dd h:mm a');
+      final eventDateTime = dateFormat.parse(event.date);
+      final isSameDay = now.year == eventDateTime.year &&
+          now.month == eventDateTime.month &&
+          now.day == eventDateTime.day;
+
+      String newStatus;
+      if (eventDateTime.isBefore(now) && !isSameDay) {
+        newStatus = 'Past';
+      } else if (isSameDay) {
+        newStatus = 'Current';
+      } else {
+        newStatus = 'Upcoming';
+      }
+
+      if (event.status != newStatus) {
+        await FirebaseFirestore.instance
+            .collection('events')
+            .doc(event.docId)
+            .update({'status': newStatus});
+      }
+    } catch (e) {
+      //print('Error updating event status: $e');
+    }
   }
 
   Future<void> updateEventLocal(Event event) async {

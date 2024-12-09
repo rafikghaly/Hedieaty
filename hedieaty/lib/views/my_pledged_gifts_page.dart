@@ -67,8 +67,19 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Pledged Gifts'),
-        backgroundColor: Colors.amber[300],
+        title: const Text('My Pledged Gifts', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.amber[700],
+        elevation: 10.0,
+        shadowColor: Colors.black,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFFFE6B8B), Color(0xFFFF8E53)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _fetchPledgedGifts,
@@ -96,7 +107,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                 leading: Icon(
                   Icons.card_giftcard,
                   size: 40.0,
-                  color: Colors.amber[500],
+                  color: Colors.amber[800],
                 ),
                 title: Text(
                   gift.name,
