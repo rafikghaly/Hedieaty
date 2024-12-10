@@ -327,10 +327,49 @@ class FriendFrame extends StatelessWidget {
         }
 
         return ListTile(
-          leading: CircleAvatar(
-            backgroundImage: friendProfileImage != null
-                ? MemoryImage(base64Decode(friendProfileImage))
-                : const AssetImage('assets/images/profile-default.png'),
+          leading: GestureDetector(
+            onTap: () {
+              if (friendProfileImage != null) {
+                showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    child: Stack(
+                      children: [
+                        SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(20.0),
+                                child: Image.memory(base64Decode(friendProfileImage!)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            padding: const EdgeInsets.all(0),
+                            constraints: const BoxConstraints(),
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            },
+            child: CircleAvatar(
+              backgroundImage: friendProfileImage != null
+                  ? MemoryImage(base64Decode(friendProfileImage))
+                  : const AssetImage('assets/images/profile-default.png'),
+            ),
           ),
           title: Text(
             friendName,
