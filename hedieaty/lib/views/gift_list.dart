@@ -177,6 +177,7 @@ class _GiftListPageState extends State<GiftListPage> {
   Future<void> _markGiftAsPurchased(Gift gift) async {
     try {
       await _repository.markGiftAsPurchased(gift.docId);
+      await _repository.makeNotificationPurchase(gift.eventId, _userName, gift.name);
       if (mounted) {
         setState(() {
           gift.isPurchased = true;
@@ -219,6 +220,7 @@ class _GiftListPageState extends State<GiftListPage> {
       gift.isPledged = !wasPledged;
       gift.status = gift.isPledged ? 'pledged' : 'available';
       await _repository.updateGift(gift);
+      await _repository.makeNotificationPledge(gift.eventId, _userName, gift.name);
       await _refreshGifts();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

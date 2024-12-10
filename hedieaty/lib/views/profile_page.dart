@@ -295,7 +295,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    MyPledgedGiftsPage(userId: _firebaseId!),
+                                    MyPledgedGiftsPage(userId: _firebaseId!,username: _userName,),
                               ),
                             );
                           } else {

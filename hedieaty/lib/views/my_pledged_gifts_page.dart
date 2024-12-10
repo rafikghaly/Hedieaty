@@ -6,10 +6,11 @@ import 'package:hedieaty/controllers/repository.dart';
 
 class MyPledgedGiftsPage extends StatefulWidget {
   final int userId;
+  final String username;
 
   const MyPledgedGiftsPage({
     super.key,
-    required this.userId,
+    required this.userId, required this.username,
   });
 
   @override
@@ -70,6 +71,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
   Future<void> _markGiftAsPurchased(Gift gift) async {
     try {
       await _repository.markGiftAsPurchased(gift.docId);
+      await _repository.makeNotificationPurchase(gift.eventId, widget.username, gift.name);
       setState(() {
         gift.isPurchased = true;
         gift.status = 'purchased';

@@ -14,6 +14,7 @@ import 'event_controller.dart';
 import 'friend_controller.dart';
 import 'gift_controller.dart';
 import 'pledged_gift_controller.dart';
+import 'notification_controller.dart';
 
 class Repository {
   final UserController _userController = UserController();
@@ -21,6 +22,7 @@ class Repository {
   final FriendController _friendController = FriendController();
   final GiftController _giftController = GiftController();
   final PledgedGiftController _pledgedGiftController = PledgedGiftController();
+  final NotificationController _notificationController = NotificationController();
 
   Future<bool> _isOnline() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
@@ -360,5 +362,32 @@ class Repository {
       return base64Encode(bytes);
     }
     return null;
+  }
+
+  // Notifications
+  Future<void> makeNotificationPledge(int eventId, String pledgerName, String giftName) async {
+    User? user = await _userController.getUserByEventId(eventId);
+    _notificationController.createNotification(
+      userId: user!.id.toString(),
+      title: 'New Pledge!',
+      message: '$pledgerName has pledged to buy the gift: $giftName.',
+    );
+  }
+
+  Future<void> makeNotificationPurchase(int eventId, String purchaserName, String giftName) async {
+    User? user = await _userController.getUserByEventId(eventId);
+    _notificationController.createNotification(
+      userId: user!.id.toString(),
+      title: 'A Purchase!',
+      message: '$purchaserName has Purchased the gift: $giftName.',
+    );
+  }
+
+  Future<void> updateNotification(String notificationId ) async {
+    await _notificationController.updateNotification(notificationId);
+  }
+
+  Future<void> deleteNotification(String notificationId ) async {
+    await _notificationController.deleteNotification(notificationId);
   }
 }

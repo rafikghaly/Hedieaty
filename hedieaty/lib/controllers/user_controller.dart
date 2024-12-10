@@ -423,4 +423,30 @@ class UserController {
     }
     return null;
   }
+
+  Future<User?> getUserByEventId(int eventId) async {
+    try {
+      var eventQuerySnapshot = await FirebaseFirestore.instance
+          .collection('events')
+          .where('id', isEqualTo: eventId)
+          .get();
+      if (eventQuerySnapshot.docs.isNotEmpty) {
+        var eventDoc = eventQuerySnapshot.docs.first;
+        var userId = eventDoc.data()['userId'];
+
+        var userQuerySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('id', isEqualTo: userId)
+            .get();
+        if (userQuerySnapshot.docs.isNotEmpty) {
+          var userDoc = userQuerySnapshot.docs.first;
+          return User.fromMap(userDoc.data());
+        }
+      }
+    } catch (e) {
+      print('Error getting user by eventId: $e');
+    }
+    return null;
+  }
+
 }

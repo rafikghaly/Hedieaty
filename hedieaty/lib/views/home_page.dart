@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,7 @@ import '../models/friend.dart';
 import '../models/event.dart';
 import '../models/user.dart';
 import 'event_list.dart';
+import 'notification_page.dart';
 import 'sign_in_page.dart';
 import 'package:hedieaty/controllers/repository.dart';
 
@@ -211,6 +213,47 @@ class _HomePageState extends State<HomePage> {
         elevation: 20,
         actions: <Widget>[
           IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.notifications,color: Colors.white,),
+                Positioned(
+                  right: 0,
+                  child: CircleAvatar(
+                    radius: 8,
+                    backgroundColor: Colors.red,
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('notifications')
+                          .where('userId', isEqualTo: widget.userId.toString())
+                          .where('isRead', isEqualTo: false)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          int unreadCount = snapshot.data!.docs.length;
+                          return Text(
+                            '$unreadCount',
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                          );
+                        } else {
+                          return const Text(
+                            '0',
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationPage(userId: widget.firebaseId)),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => _logout(context),
             color: Colors.white,
@@ -235,7 +278,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-
       body: RefreshIndicator(
         onRefresh: _fetchFriends,
         child: Column(
