@@ -66,7 +66,10 @@ class GiftController {
   }
 
   Future<Gift?> getGiftById_for_pledged_Firestore(int id) async {
-    var querySnapshot = await FirebaseFirestore.instance.collection('gifts').where('id', isEqualTo: id).get();
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('gifts')
+        .where('id', isEqualTo: id)
+        .get();
     if (querySnapshot.docs.isNotEmpty) {
       var docSnapshot = querySnapshot.docs.first;
       // print('Gift data retrieved: ${docSnapshot.data()}');
@@ -106,6 +109,39 @@ class GiftController {
   Future<void> deleteGiftFirestore(String docId) async {
     await FirebaseFirestore.instance.collection('gifts').doc(docId).delete();
   }
+
+  Future<void> markGiftAsPurchased(String? giftId) async {
+    if (giftId != null) {
+      final db = await database;
+      await db.update(
+        'gifts',
+        {
+          'isPurchased': 1,
+          'status': 'purchased'
+        },
+        where: 'id = ?',
+        whereArgs: [giftId],
+      );
+
+      final FirebaseFirestore firestore = FirebaseFirestore.instance;
+      try {
+        DocumentSnapshot docSnapshot =
+            await firestore.collection('gifts').doc(giftId).get();
+        if (docSnapshot.exists) {
+          await firestore.collection('gifts').doc(giftId).update({
+            'isPurchased': 1,
+            'status': 'purchased'
+          });
+          // print('Gift $giftId marked as purchased in Firestore');
+        } else {
+          // print('Gift $giftId not found in Firestore');
+        }
+      } catch (e) {
+        // print('Error marking gift as purchased in Firestore: $e');
+      }
+    }
+  }
+
   ///THIS IS ONLY FOR LOCAL_GIFTS TABLE
   Future<int> insertGiftLocalTABLE(Gift gift) async {
     final db = await database;
@@ -134,7 +170,7 @@ class GiftController {
         category: maps[i]['category'],
         price: maps[i]['price'],
         status: maps[i]['status'],
-        isPledged: maps[i]['isPledged'] ==1,
+        isPledged: maps[i]['isPledged'] == 1,
         imageUrl: maps[i]['imageUrl'],
         eventId: maps[i]['eventId'],
       );
@@ -168,8 +204,6 @@ class GiftController {
       whereArgs: [giftId],
     );
   }
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 }

@@ -201,10 +201,11 @@ class _EventListPageState extends State<EventListPage> {
                           Text('Description: ${event.description}'),
                         ],
                       ),
-                      trailing: widget.isOwner
+                      trailing: (widget.isOwner)
                           ? Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if(event.status!="Past")
                           IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () {
@@ -229,6 +230,7 @@ class _EventListPageState extends State<EventListPage> {
                               userId: widget.userId,
                               isOwner: widget.isOwner,
                               eventName: event.name,
+                              eventStatus:event.status,
                             ),
                           ),
                         );

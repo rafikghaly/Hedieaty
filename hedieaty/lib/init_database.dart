@@ -65,6 +65,7 @@ class DatabaseInitializer {
           'price REAL, '
           'status TEXT, '
           'isPledged INTEGER, '
+          'isPurchased INTEGER, '
           'imageUrl TEXT, '
           'eventId INTEGER'
           ')',
@@ -113,6 +114,7 @@ class DatabaseInitializer {
           'price REAL, '
           'status TEXT, '
           'isPledged INTEGER, '
+          'isPurchased INTEGER, '
           'imageUrl TEXT, '
           'eventId INTEGER'
           ')',

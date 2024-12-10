@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Gift {
   late int? id;
   final int eventId;
@@ -9,6 +11,7 @@ class Gift {
   final String? imageUrl;
   final double price;
   String? docId;
+  bool isPurchased;
 
   Gift({
     this.id,
@@ -21,6 +24,7 @@ class Gift {
     required this.imageUrl,
     required this.price,
     required this.docId,
+    this.isPurchased = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -35,6 +39,7 @@ class Gift {
       'imageUrl': imageUrl,
       'price': price,
       'docId': docId,
+      'isPurchased': isPurchased ? 1 : 0,
     };
   }
 
@@ -50,6 +55,25 @@ class Gift {
       imageUrl: map['imageUrl'] as String?,
       price: map['price'] as double,
       docId: map['docId'] as String?,
+      isPurchased: map['isPurchased'] == 1,
+    );
+  }
+
+  // For real-time Listeners
+  factory Gift.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return Gift(
+      id: data['id'],
+      eventId: data['eventId'],
+      name: data['name'],
+      description: data['description'],
+      category: data['category'],
+      status: data['status'],
+      isPledged: data['isPledged'] == 1,
+      imageUrl: data['imageUrl'],
+      price: data['price'],
+      docId: doc.id,
+      isPurchased: data['isPurchased'] == 1,
     );
   }
 }

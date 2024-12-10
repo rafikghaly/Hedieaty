@@ -48,7 +48,7 @@ class _EditEventPageState extends State<EditEventPage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
 
@@ -112,13 +112,18 @@ class _EditEventPageState extends State<EditEventPage> {
       _selectedTime!.minute,
     );
 
+    if (selectedDateTime.isBefore(now)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('The event date cannot be in the past. Please select a future date.')),
+      );
+      return;
+    }
+
     final isSameDay = now.year == _selectedDate!.year &&
         now.month == _selectedDate!.month &&
         now.day == _selectedDate!.day;
 
-    if (selectedDateTime.isBefore(now) && !isSameDay) {
-      _selectedStatus = 'Past';
-    } else if (isSameDay) {
+    if (isSameDay) {
       _selectedStatus = 'Current';
     } else {
       _selectedStatus = 'Upcoming';

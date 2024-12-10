@@ -11,7 +11,8 @@ class GiftDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gift Details', style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Gift Details', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[700],
         elevation: 10.0,
         shadowColor: Colors.black,
@@ -84,10 +85,21 @@ class GiftDetailsPage extends StatelessWidget {
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 20),
-            if (gift.isPledged)
+            if (gift.isPurchased)
+              const Text(
+                'This gift is purchased.',
+                style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold),
+              )
+            else if (gift.isPledged)
               const Text(
                 'This gift is pledged.',
-                style: TextStyle(fontSize: 18, color: Colors.green, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold),
               ),
           ],
         ),

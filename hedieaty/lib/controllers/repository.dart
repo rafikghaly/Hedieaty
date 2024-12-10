@@ -281,6 +281,14 @@ class Repository {
     }
   }
 
+  Future<void> markGiftAsPurchased(String? giftId) async {
+    if (await _isOnline()) {
+      await _giftController.markGiftAsPurchased(giftId);
+    } else {
+      throw Exception("Cannot purchase gift while offline.");
+    }
+  }
+
   Future<void> deleteGift(String id) async {
     if (await _isOnline()) {
       await _giftController.deleteGiftFirestore(id);

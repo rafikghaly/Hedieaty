@@ -30,9 +30,11 @@ class _AddGiftPageState extends State<AddGiftPage> {
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
-      setState(() {
-        _isLoading = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
 
       final newGift = Gift(
         id: null, // ID is auto-generated
@@ -57,17 +59,21 @@ class _AddGiftPageState extends State<AddGiftPage> {
       } catch (e) {
         //print('Error adding gift: $e');
       } finally {
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
 
   Future<void> _pickAndUploadImage() async {
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
@@ -85,20 +91,26 @@ class _AddGiftPageState extends State<AddGiftPage> {
         final jpgBytes = img.encodeJpg(image, quality: 75);
         final base64String = base64Encode(jpgBytes);
 
-        setState(() {
-          _imageBase64 = base64String;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _imageBase64 = base64String;
+            _isLoading = false;
+          });
+        }
       } else {
         //print('Failed to decode image');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } else {
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
       }
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 

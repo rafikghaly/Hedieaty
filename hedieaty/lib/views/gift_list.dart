@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/gift.dart';
@@ -16,6 +18,7 @@ class GiftListPage extends StatefulWidget {
   final bool showPledgedGifts;
   final bool isOwner;
   final String eventName;
+  final String eventStatus;
 
   const GiftListPage({
     super.key,
@@ -24,6 +27,7 @@ class GiftListPage extends StatefulWidget {
     this.showPledgedGifts = false,
     required this.isOwner,
     required this.eventName,
+    required this.eventStatus,
   });
 
   @override
@@ -41,101 +45,182 @@ class _GiftListPageState extends State<GiftListPage> {
   int? _userId;
 
   final Repository _repository = Repository();
+  StreamSubscription<QuerySnapshot>? _subscription;
+
+  Map<int, int> pledgedGiftsMap = {};
 
   @override
   void initState() {
     super.initState();
     _fetchEventUserAndGifts();
+    _setupRealTimeListener();
     _loadUserData();
     _eventName = widget.eventName;
   }
 
-  Future<void> _loadUserData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _userId = prefs.getInt('userId');
-      _userName = prefs.getString('userName') ?? '';
-      _email = prefs.getString('email') ?? '';
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+
+  void _setupRealTimeListener() {
+    _subscription = FirebaseFirestore.instance
+        .collection('gifts')
+        .where('eventId', isEqualTo: widget.eventId)
+        .snapshots()
+        .listen((querySnapshot) {
+      if (mounted) {
+        setState(() {
+          _gifts = querySnapshot.docs.map((doc) => Gift.fromFirestore(doc)).toList();
+        });
+      }
+    }, onError: (error) {
+      // Handle errors here if needed
+      print("Error while fetching data: $error");
     });
   }
 
+
+
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _userId = prefs.getInt('userId');
+        _userName = prefs.getString('userName') ?? '';
+        _email = prefs.getString('email') ?? '';
+      });
+    }
+  }
+
   Future<void> _fetchEventUserAndGifts() async {
+    // print('Fetching event and user data...');
     _event = await _repository.getEventById(widget.eventId);
     _user = await _repository.getUserById(widget.userId);
+    // print('Fetched event: $_event');
+    // print('Fetched user: $_user');
+
+    // Fetch pledged gifts data
+    final pledgedGiftsList =
+        await _repository.getPledgedGiftsForEvent(widget.eventId);
+    pledgedGiftsMap = {
+      for (var pledgedGift in pledgedGiftsList)
+        pledgedGift.giftId: pledgedGift.userId
+    };
+    // print('Pledged gifts map: $pledgedGiftsMap');
 
     // Get the gifts associated with the event
     if (widget.showPledgedGifts) {
-      final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
+      final pledgedGifts =
+          await _repository.getPledgedGiftsForUser(widget.userId);
       // print('Pledged gifts: $pledgedGifts');
       _gifts = [];
       for (var pledgedGift in pledgedGifts) {
         // print('Fetching gift details for gift ID ${pledgedGift.giftId}');
-        final gift = await _repository.getGiftById(pledgedGift.giftId as String);
+        final gift =
+            await _repository.getGiftById(pledgedGift.giftId as String);
         // print('Gift details for pledged gift ${pledgedGift.giftId}: $gift');
         if (gift != null) {
           _gifts.add(gift);
         }
       }
+      // print('Fetched pledged gifts: $pledgedGifts');
     } else {
       _gifts = await _repository.getGifts(widget.eventId);
+      // print('Fetched event gifts: $_gifts');
     }
 
     // Get names of users who pledged each gift
     for (var gift in _gifts) {
       if (gift.isPledged) {
-        final pledgedGifts = await _repository.getPledgedGiftsForEvent(widget.eventId);
-        final pledgedGift = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
+        final pledgedGifts =
+            await _repository.getPledgedGiftsForEvent(widget.eventId);
+        final pledgedGift =
+            pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
         final pledgedUser = await _repository.getUserById(pledgedGift.userId);
         if (pledgedUser != null) {
           _pledgedUserNames[gift.id!] = pledgedUser.name;
+          // print('Pledged user for gift ${gift.id}: ${pledgedUser.name}');
         }
       }
     }
 
     // print('Fetched gifts: $_gifts');
-    setState(() {});
+    if(mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _markGiftAsPurchased(Gift gift) async {
+    try {
+      await _repository.markGiftAsPurchased(gift.docId);
+      if (mounted) {
+        setState(() {
+          gift.isPurchased = true;
+          gift.status = 'purchased';
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'You can\'t mark the gift as purchased while offline. Please check your internet connection.'),
+        ),
+      );
+    }
   }
 
   Future<void> _pledgeGift(Gift gift) async {
-    setState(() {
-      gift.isPledged = !gift.isPledged;
+    try {
+      final wasPledged = gift.isPledged;
+
+      final pledgedGift = PledgedGift(
+        eventId: widget.eventId,
+        userId: _userId!,
+        giftId: gift.id!,
+        friendName: _user?.name ?? 'Unknown',
+        dueDate: _event?.date ?? 'Unknown',
+        docId: '',
+      );
+
+      if (!wasPledged) {
+        await _repository.insertPledgedGift(pledgedGift);
+      } else {
+        final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
+        final giftToDelete = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
+        await _repository.deletePledgedGift(giftToDelete.docId ?? '');
+      }
+
+      gift.isPledged = !wasPledged;  // Update the state
       gift.status = gift.isPledged ? 'pledged' : 'available';
-    });
-
-    final pledgedGift = PledgedGift(
-      eventId: widget.eventId,
-      userId: _userId ?? 0,
-      giftId: gift.id ?? 0,
-      friendName: _user?.name ?? 'Unknown',
-      dueDate: _event?.date ?? 'Unknown',
-      docId: '',
-    );
-
-    // print('Pledging gift: $gift with pledgedGift: $pledgedGift');
-
-    if (gift.isPledged) {
-      await _repository.insertPledgedGift(pledgedGift);
-    } else {
-      final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
-      final giftToDelete = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
-      await _repository.deletePledgedGift(giftToDelete.docId ?? '');
+      await _repository.updateGift(gift);
+      await _refreshGifts();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
     }
-
-    await _repository.updateGift(gift);
-    await _refreshGifts();
   }
 
   Future<void> _deleteGift(Gift gift) async {
     await _repository.deleteGift(gift.docId!);
-    setState(() {
-      _gifts.remove(gift);
-    });
+    if (mounted) {
+      setState(() {
+        _gifts.remove(gift);
+      });
+    }
     await _refreshGifts();
   }
 
   Future<void> _refreshGifts() async {
     await _fetchEventUserAndGifts();
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -161,116 +246,153 @@ class _GiftListPageState extends State<GiftListPage> {
         child: _gifts.isEmpty
             ? const Center(child: Text('No gifts available.'))
             : ListView.builder(
-          itemCount: _gifts.length,
-          itemBuilder: (context, index) {
-            final gift = _gifts[index];
-            final pledgedUserName = _pledgedUserNames[gift.id] ?? '';
+                itemCount: _gifts.length,
+                itemBuilder: (context, index) {
+                  final gift = _gifts[index];
+                  final pledgedUserName = _pledgedUserNames[gift.id] ?? '';
 
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-              elevation: 4.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              color: gift.isPledged ? Colors.lightGreen[100] : null,
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16.0),
-                leading: gift.imageUrl != null
-                    ? Image.memory(
-                  base64Decode(gift.imageUrl!),
-                  fit: BoxFit.cover,
-                  width: 50,
-                  height: 50,
-                )
-                    : Icon(
-                  Icons.card_giftcard,
-                  size: 40.0,
-                  color: Colors.amber[800],
-                ),
-                title: Text(
-                  gift.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18.0,
-                  ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Category: ${gift.category}'),
-                    Text('Status: ${gift.status}'),
-                    Text('Description: ${gift.description}'),
-                    Text('Price: \$${gift.price.toStringAsFixed(2)}'),
-                    if (gift.isPledged) Text('Pledged by: $pledgedUserName'),
-                  ],
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GiftDetailsPage(gift: gift),
+                  Color cardColor;
+                  if (gift.isPurchased) {
+                    cardColor = Colors.red[200]!;
+                  } else if (gift.isPledged) {
+                    cardColor = Colors.lightGreen[200]!;
+                  } else {
+                    cardColor = Colors.white;
+                  }
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 12.0),
+                    elevation: 4.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
                     ),
-                  );
-                },
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (!widget.isOwner && !gift.isPledged)
-                      ElevatedButton(
-                        onPressed: () => _pledgeGift(gift),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber[800],
+                    color: cardColor,
+                    child: ListTile(
+                        contentPadding: const EdgeInsets.all(16.0),
+                        leading: gift.imageUrl != null
+                            ? Image.memory(
+                                base64Decode(gift.imageUrl!),
+                                fit: BoxFit.cover,
+                                width: 50,
+                                height: 50,
+                              )
+                            : gift.isPurchased
+                                ? const Icon(
+                                    Icons.card_giftcard,
+                                    size: 40.0,
+                                  )
+                                : Icon(
+                                    Icons.card_giftcard,
+                                    size: 40.0,
+                                    color: Colors.amber[800],
+                                  ),
+                        title: Text(
+                          gift.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18.0,
+                          ),
                         ),
-                        child: const Text(
-                          'Pledge',
-                          style: TextStyle(color: Colors.white),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Category: ${gift.category}'),
+                            Text('Status: ${gift.status}'),
+                            Text('Description: ${gift.description}'),
+                            Text('Price: \$${gift.price.toStringAsFixed(2)}'),
+                            if (gift.isPledged)
+                              Text('Pledged by: $pledgedUserName'),
+                          ],
                         ),
-                      ),
-                    const SizedBox(width: 8.0),
-                    if (widget.isOwner && !gift.isPledged)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
+                        onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => EditGiftPage(
-                                gift: gift,
-                                onGiftEdited: (editedGift) => _refreshGifts(),
-                              ),
+                              builder: (context) => GiftDetailsPage(gift: gift),
                             ),
-                          ).then((_) => _refreshGifts());
+                          );
                         },
-                      ),
-                    if (widget.isOwner && !gift.isPledged)
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _deleteGift(gift),
-                      ),
-                  ],
-                ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (!widget.isOwner && !gift.isPledged && widget.eventStatus != "Past")
+                              ElevatedButton(
+                                onPressed: () {
+                                  //print('Pledge button pressed for gift: ${gift.id}');
+                                  _pledgeGift(gift);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber[800],
+                                ),
+                                child: const Text(
+                                  'Pledge',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            const SizedBox(width: 8.0),
+                            if (widget.isOwner && !gift.isPledged && widget.eventStatus != "Past")
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  //print('Edit button pressed for gift: ${gift.id}');
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditGiftPage(
+                                        gift: gift,
+                                        onGiftEdited: (editedGift) =>
+                                            _refreshGifts(),
+                                      ),
+                                    ),
+                                  ).then((_) => _refreshGifts());
+                                },
+                              ),
+                            if (widget.isOwner && !gift.isPledged)
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  //print('Delete button pressed for gift: ${gift.id}');
+                                  _deleteGift(gift);
+                                },
+                              ),
+                            if (gift.isPledged &&
+                                !gift.isPurchased &&
+                                pledgedGiftsMap[gift.id] == _userId)
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await _markGiftAsPurchased(gift);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red[400],
+                                ),
+                                child: const Text(
+                                  'Purchased',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                          ],
+                        )),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
       floatingActionButton: widget.isOwner
           ? FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddGiftPage(
-                eventId: widget.eventId,
-                userId: widget.userId,
-                isPrivate: false,
-              ),
-            ),
-          ).then((_) => _refreshGifts());
-        },
-        backgroundColor: Colors.amber[800],
-        child: const Icon(Icons.add),
-      )
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddGiftPage(
+                      eventId: widget.eventId,
+                      userId: widget.userId,
+                      isPrivate: false,
+                    ),
+                  ),
+                ).then((_) => _refreshGifts());
+              },
+              backgroundColor: Colors.amber[800],
+              child: const Icon(Icons.add),
+            )
           : null,
     );
   }

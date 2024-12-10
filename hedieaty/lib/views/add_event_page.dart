@@ -37,7 +37,7 @@ class _AddEventPageState extends State<AddEventPage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime.now(), // Ensure the earliest selectable date is today
       lastDate: DateTime(2101),
     );
 
@@ -87,13 +87,18 @@ class _AddEventPageState extends State<AddEventPage> {
       _selectedTime!.minute,
     );
 
+    if (selectedDateTime.isBefore(now)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('The event date cannot be in the past. Please select a future date.')),
+      );
+      return;
+    }
+
     final isSameDay = now.year == _selectedDate!.year &&
         now.month == _selectedDate!.month &&
         now.day == _selectedDate!.day;
 
-    if (selectedDateTime.isBefore(now) && !isSameDay) {
-      status = 'Past';
-    } else if (isSameDay) {
+    if (isSameDay) {
       status = 'Current';
     } else {
       status = 'Upcoming';
@@ -195,7 +200,7 @@ class _AddEventPageState extends State<AddEventPage> {
                 onTap: () => _selectDate(context),
                 decoration: InputDecoration(
                   labelText: 'Date',
-                  suffixIcon: Icon(Icons.calendar_today),
+                  suffixIcon: const Icon(Icons.calendar_today),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                 ),
               ),
@@ -206,7 +211,7 @@ class _AddEventPageState extends State<AddEventPage> {
                 onTap: () => _selectTime(context),
                 decoration: InputDecoration(
                   labelText: 'Time',
-                  suffixIcon: Icon(Icons.access_time),
+                  suffixIcon: const Icon(Icons.access_time),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                 ),
               ),

@@ -14,6 +14,8 @@ class SyncController {
     await db.execute('DELETE FROM gifts');
     await db.execute('DELETE FROM pledged_gifts');
     await db.execute('DELETE FROM friend_local');
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // await prefs.clear();
     // print('Cleared DB');
   }
 
@@ -113,9 +115,6 @@ class SyncController {
   Future<void> insertDataIntoLocalDatabase(Map<String, dynamic> data) async {
     // Clearing Local
     await clearLocalDatabase();
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-
     final db = await _databaseInitializer.database;
 
     // Insert user data into local database
