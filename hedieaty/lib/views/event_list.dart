@@ -44,6 +44,8 @@ class _EventListPageState extends State<EventListPage> {
         _events.sort((a, b) => a.category.compareTo(b.category));
       } else if (sortOption == 'Status') {
         _events.sort((a, b) => a.status.compareTo(b.status));
+      } else if (sortOption == 'Date') {
+        _events.sort((a, b) => a.date.compareTo(b.date));
       }
     });
   }
@@ -142,7 +144,7 @@ class _EventListPageState extends State<EventListPage> {
                         _sortEvents(newValue);
                       }
                     },
-                    items: <String>['Name', 'Category', 'Status']
+                    items: <String>['Name', 'Category', 'Status', 'Date']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,

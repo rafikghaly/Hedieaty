@@ -49,6 +49,11 @@ class _GiftListPageState extends State<GiftListPage> {
 
   Map<int, int> pledgedGiftsMap = {};
 
+  final TextEditingController _searchController = TextEditingController();
+  List<Gift> _filteredGifts = [];
+  String _selectedCategory = 'All';
+  String _selectedEventStatus = 'All';
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +69,6 @@ class _GiftListPageState extends State<GiftListPage> {
     super.dispose();
   }
 
-
   void _setupRealTimeListener() {
     _subscription = FirebaseFirestore.instance
         .collection('gifts')
@@ -73,16 +77,15 @@ class _GiftListPageState extends State<GiftListPage> {
         .listen((querySnapshot) {
       if (mounted) {
         setState(() {
-          _gifts = querySnapshot.docs.map((doc) => Gift.fromFirestore(doc)).toList();
+          _gifts =
+              querySnapshot.docs.map((doc) => Gift.fromFirestore(doc)).toList();
+          _filterGifts(_searchController.text);
         });
       }
     }, onError: (error) {
-      // Handle errors here if needed
-      print("Error while fetching data: $error");
+      //print("Error while fetching data: $error");
     });
   }
-
-
 
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -147,10 +150,28 @@ class _GiftListPageState extends State<GiftListPage> {
       }
     }
 
-    // print('Fetched gifts: $_gifts');
-    if(mounted) {
-      setState(() {});
+    if (mounted) {
+      setState(() {
+        _filterGifts(_searchController.text);
+      });
     }
+  }
+
+  void _filterGifts(String query) {
+    final filteredGifts = _gifts.where((gift) {
+      final nameMatches = gift.name.toLowerCase().contains(query.toLowerCase());
+      final categoryMatches =
+          _selectedCategory == 'All' || gift.category == _selectedCategory;
+
+      final eventStatusMatches =
+          _selectedEventStatus == 'All' || gift.status == _selectedEventStatus;
+
+      return nameMatches && categoryMatches && eventStatusMatches;
+    }).toList();
+
+    setState(() {
+      _filteredGifts = filteredGifts;
+    });
   }
 
   Future<void> _markGiftAsPurchased(Gift gift) async {
@@ -188,12 +209,14 @@ class _GiftListPageState extends State<GiftListPage> {
       if (!wasPledged) {
         await _repository.insertPledgedGift(pledgedGift);
       } else {
-        final pledgedGifts = await _repository.getPledgedGiftsForUser(widget.userId);
-        final giftToDelete = pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
+        final pledgedGifts =
+            await _repository.getPledgedGiftsForUser(widget.userId);
+        final giftToDelete =
+            pledgedGifts.firstWhere((pg) => pg.giftId == gift.id);
         await _repository.deletePledgedGift(giftToDelete.docId ?? '');
       }
 
-      gift.isPledged = !wasPledged;  // Update the state
+      gift.isPledged = !wasPledged;
       gift.status = gift.isPledged ? 'pledged' : 'available';
       await _repository.updateGift(gift);
       await _refreshGifts();
@@ -223,11 +246,26 @@ class _GiftListPageState extends State<GiftListPage> {
     }
   }
 
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      child: TextField(
+        controller: _searchController,
+        decoration: const InputDecoration(
+          hintText: 'Search...',
+          hintStyle: TextStyle(color: Colors.white70),
+          border: InputBorder.none,
+        ),
+        onChanged: _filterGifts,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_eventName, style: const TextStyle(color: Colors.white)),
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.amber[700],
         elevation: 10.0,
         shadowColor: Colors.black,
@@ -240,15 +278,111 @@ class _GiftListPageState extends State<GiftListPage> {
             ),
           ),
         ),
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            children: [
+              //Event Name
+              Expanded(
+                flex: 6,
+                child: Text(
+                  _eventName,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              const Spacer(),
+
+              // Search Bar
+              Flexible(
+                flex: 5,
+                child: _buildSearchField(),
+              ),
+
+              const SizedBox(width: 8),
+
+              // Category Filter Dropdown
+              Flexible(
+                  flex: 4,
+                  child: DropdownButton<String>(
+                    value: _selectedCategory,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value ?? 'All';
+                        _filterGifts(_searchController.text);
+                      });
+                    },
+                    isExpanded: true,
+                    items: <String>[
+                      'All',
+                      'Electronics',
+                      'Clothing',
+                      'Toys',
+                      'Books',
+                      'Home Decor',
+                      'Beauty & Personal Care',
+                      'Food & Beverages',
+                      'Sports & Outdoors',
+                      'Gift Cards',
+                      'Music & Movies',
+                      'Other'
+                    ].map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Container(
+                          constraints: const BoxConstraints(
+                              maxWidth: 120),
+                          child: Text(
+                            value,
+                            overflow: TextOverflow
+                                .ellipsis,
+                            softWrap:
+                                true,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  )),
+
+              const SizedBox(width: 8),
+
+              // Event Status Filter Dropdown
+              Flexible(
+                flex: 3,
+                child: DropdownButton<String>(
+                  value: _selectedEventStatus,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedEventStatus = value ?? 'All';
+                      _filterGifts(_searchController.text);
+                    });
+                  },
+                  isExpanded: true,
+                  items: <String>['All', 'available', 'pledged', 'purchased']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value,
+                          overflow: TextOverflow
+                              .ellipsis,
+                          softWrap: true,
+                        )
+                        );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _refreshGifts,
-        child: _gifts.isEmpty
-            ? const Center(child: Text('No gifts available.'))
+        child: _filteredGifts.isEmpty
+            ? const Center(child: Text('No gifts found.'))
             : ListView.builder(
-                itemCount: _gifts.length,
+                itemCount: _filteredGifts.length,
                 itemBuilder: (context, index) {
-                  final gift = _gifts[index];
+                  final gift = _filteredGifts[index];
                   final pledgedUserName = _pledgedUserNames[gift.id] ?? '';
 
                   Color cardColor;
@@ -259,119 +393,47 @@ class _GiftListPageState extends State<GiftListPage> {
                   } else {
                     cardColor = Colors.white;
                   }
+
                   return Card(
                     margin: const EdgeInsets.symmetric(
                         vertical: 8.0, horizontal: 12.0),
                     elevation: 4.0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
+                        borderRadius: BorderRadius.circular(15.0)),
                     color: cardColor,
                     child: ListTile(
-                        contentPadding: const EdgeInsets.all(16.0),
-                        leading: gift.imageUrl != null
-                            ? Image.memory(
-                                base64Decode(gift.imageUrl!),
-                                fit: BoxFit.cover,
-                                width: 50,
-                                height: 50,
-                              )
-                            : gift.isPurchased
-                                ? const Icon(
-                                    Icons.card_giftcard,
-                                    size: 40.0,
-                                  )
-                                : Icon(
-                                    Icons.card_giftcard,
-                                    size: 40.0,
-                                    color: Colors.amber[800],
-                                  ),
-                        title: Text(
-                          gift.name,
+                      contentPadding: const EdgeInsets.all(16.0),
+                      leading: gift.imageUrl != null
+                          ? Image.memory(base64Decode(gift.imageUrl!),
+                              fit: BoxFit.cover, width: 50, height: 50)
+                          : gift.isPurchased
+                              ? const Icon(Icons.card_giftcard, size: 40.0)
+                              : Icon(Icons.card_giftcard,
+                                  size: 40.0, color: Colors.amber[800]),
+                      title: Text(gift.name,
                           style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.0,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Category: ${gift.category}'),
-                            Text('Status: ${gift.status}'),
-                            Text('Description: ${gift.description}'),
-                            Text('Price: \$${gift.price.toStringAsFixed(2)}'),
-                            if (gift.isPledged)
-                              Text('Pledged by: $pledgedUserName'),
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => GiftDetailsPage(gift: gift),
-                            ),
-                          );
-                        },
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!widget.isOwner && !gift.isPledged && widget.eventStatus != "Past")
-                              ElevatedButton(
-                                onPressed: () {
-                                  //print('Pledge button pressed for gift: ${gift.id}');
-                                  _pledgeGift(gift);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber[800],
-                                ),
-                                child: const Text(
-                                  'Pledge',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            const SizedBox(width: 8.0),
-                            if (widget.isOwner && !gift.isPledged && widget.eventStatus != "Past")
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () {
-                                  //print('Edit button pressed for gift: ${gift.id}');
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => EditGiftPage(
-                                        gift: gift,
-                                        onGiftEdited: (editedGift) =>
-                                            _refreshGifts(),
-                                      ),
-                                    ),
-                                  ).then((_) => _refreshGifts());
-                                },
-                              ),
-                            if (widget.isOwner && !gift.isPledged)
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  //print('Delete button pressed for gift: ${gift.id}');
-                                  _deleteGift(gift);
-                                },
-                              ),
-                            if (gift.isPledged &&
-                                !gift.isPurchased &&
-                                pledgedGiftsMap[gift.id] == _userId)
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await _markGiftAsPurchased(gift);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red[400],
-                                ),
-                                child: const Text(
-                                  'Purchased',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                          ],
-                        )),
+                              fontWeight: FontWeight.bold, fontSize: 18.0)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Category: ${gift.category}'),
+                          Text('Status: ${gift.status}'),
+                          Text('Description: ${gift.description}'),
+                          Text('Price: \$${gift.price.toStringAsFixed(2)}'),
+                          if (gift.isPledged)
+                            Text('Pledged by: $pledgedUserName'),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  GiftDetailsPage(gift: gift)),
+                        );
+                      },
+                      trailing: _buildGiftActions(gift),
+                    ),
                   );
                 },
               ),
@@ -394,6 +456,52 @@ class _GiftListPageState extends State<GiftListPage> {
               child: const Icon(Icons.add),
             )
           : null,
+    );
+  }
+
+  Widget _buildGiftActions(Gift gift) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!widget.isOwner && !gift.isPledged && widget.eventStatus != "Past")
+          ElevatedButton(
+            onPressed: () => _pledgeGift(gift),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[800]),
+            child: const Text('Pledge', style: TextStyle(color: Colors.white)),
+          ),
+        const SizedBox(width: 8.0),
+        if (widget.isOwner && !gift.isPledged && widget.eventStatus != "Past")
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditGiftPage(
+                    gift: gift,
+                    onGiftEdited: (editedGift) => _refreshGifts(),
+                  ),
+                ),
+              ).then((_) => _refreshGifts());
+            },
+          ),
+        if (widget.isOwner && !gift.isPledged)
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => _deleteGift(gift),
+          ),
+        if (gift.isPledged &&
+            !gift.isPurchased &&
+            pledgedGiftsMap[gift.id] == _userId)
+          ElevatedButton(
+            onPressed: () async {
+              await _markGiftAsPurchased(gift);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red[400]),
+            child:
+                const Text('Purchased', style: TextStyle(color: Colors.white)),
+          ),
+      ],
     );
   }
 }

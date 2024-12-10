@@ -25,6 +25,20 @@ class _EditGiftPageState extends State<EditGiftPage> {
   late String? _imageBase64;
   bool _isLoading = false;
 
+  final List<String> _categories = [
+    'Electronics',
+    'Clothing',
+    'Toys',
+    'Books',
+    'Home Decor',
+    'Beauty & Personal Care',
+    'Food & Beverages',
+    'Sports & Outdoors',
+    'Gift Cards',
+    'Music & Movies',
+    'Other',
+  ];
+
   final Repository _repository = Repository();
 
   @override
@@ -189,15 +203,27 @@ class _EditGiftPageState extends State<EditGiftPage> {
                   },
                 ),
                 const SizedBox(height: 10),
-                TextFormField(
-                  initialValue: _category,
+                // Category Dropdown
+                DropdownButtonFormField<String>(
+                  value: _category,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                   ),
+                  items: _categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _category = value!;
+                    });
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a category';
+                      return 'Please select a category';
                     }
                     return null;
                   },
