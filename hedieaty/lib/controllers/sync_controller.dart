@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hedieaty/init_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SyncController {
@@ -110,7 +111,11 @@ class SyncController {
   }
 
   Future<void> insertDataIntoLocalDatabase(Map<String, dynamic> data) async {
+    // Clearing Local
     await clearLocalDatabase();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
     final db = await _databaseInitializer.database;
 
     // Insert user data into local database

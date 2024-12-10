@@ -269,7 +269,7 @@ class _EventListPageState extends State<EventListPage> {
         },
         backgroundColor: Colors.amber[800],
         tooltip: 'My Local Events',
-        child: const Icon(Icons.event_note, color: Colors.white),
+        child: const Icon(Icons.lock, color: Colors.white),
       )
           : null,
     );

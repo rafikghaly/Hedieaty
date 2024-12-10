@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/event.dart';
@@ -103,21 +104,31 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickAndSaveImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
 
     if (pickedFile != null) {
       final File file = File(pickedFile.path);
       final bytes = await file.readAsBytes();
-      final base64String = base64Encode(bytes);
-      setState(() {
-        _profileImageBase64 = base64String;
-      });
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('profileImageBase64', base64String);
+      // Convert image to (JPEG)
+      img.Image? image = img.decodeImage(bytes);
+      if (image != null) {
+        final jpgBytes = img.encodeJpg(image, quality: 75);
+        final base64String = base64Encode(jpgBytes);
+        setState(() {
+          _profileImageBase64 = base64String;
+        });
 
-      // Save to Firestore Database
-      await _saveProfileImageToFirestore(base64String);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('profileImageBase64', base64String);
+        await _saveProfileImageToFirestore(base64String);
+
+      } else {
+        //print('Failed to decode image');
+      }
     }
   }
 
@@ -137,6 +148,15 @@ class _ProfilePageState extends State<ProfilePage> {
           .update({'profileImageBase64': base64String});
     } else {
       //print('No user found with firebaseUid: $_firebaseUid');
+    }
+  }
+
+  ImageProvider _decodeProfileImage(String base64String) {
+    try {
+      return MemoryImage(base64Decode(base64String));
+    } catch (e) {
+      //print('Error decoding base64 image data: $e');
+      return const AssetImage('assets/images/profile-default.png');
     }
   }
 
@@ -170,28 +190,74 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Center(
                   child: Column(
                     children: [
-                      GestureDetector(
-                        onTap: _pickAndSaveImage,
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundImage: _profileImageBase64 != null
-                                  ? MemoryImage(base64Decode(_profileImageBase64!))
-                                  : const AssetImage('assets/images/profile-default.png') as ImageProvider,
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-                                onPressed: _pickAndSaveImage,
-                                padding: const EdgeInsets.all(0),
-                                constraints: const BoxConstraints(),
-                                color: Colors.grey,
+                      SingleChildScrollView(
+                        child: GestureDetector(
+                          onTap: _pickAndSaveImage,
+                          child: Stack(
+                            children: [
+                              SingleChildScrollView(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (_profileImageBase64.isEmpty) {
+                                      _pickAndSaveImage();
+                                    } else {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => Dialog(
+                                          child: Stack(
+                                            children: [
+                                              SingleChildScrollView(
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Image.memory(base64Decode(_profileImageBase64)),
+                                                  ],
+                                                ),
+                                              ),
+                                              Positioned(
+                                                top: 10,
+                                                right: 10,
+                                                child: IconButton(
+                                                  icon: const Icon(Icons.edit, color: Colors.white, size: 30),
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                    _pickAndSaveImage();
+                                                  },
+                                                  padding: const EdgeInsets.all(0),
+                                                  constraints: const BoxConstraints(),
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: CircleAvatar(
+                                    radius: 70,
+                                    backgroundImage: _profileImageBase64.isNotEmpty
+                                        ? _decodeProfileImage(_profileImageBase64)
+                                        : const AssetImage('assets/images/profile-default.png'),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                                  onPressed: _pickAndSaveImage,
+                                  padding: const EdgeInsets.all(0),
+                                  constraints: const BoxConstraints(),
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+
+
+
                         ),
                       ),
                       const SizedBox(height: 20),

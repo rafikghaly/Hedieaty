@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:hedieaty/controllers/gift_controller.dart'; // Import the controller
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import '../models/gift.dart';
 import 'package:hedieaty/controllers/repository.dart';
 
@@ -22,13 +24,15 @@ class _AddGiftPageState extends State<AddGiftPage> {
   String _category = '';
   double _price = 0.0;
   String? _imageBase64;
+  bool _isLoading = false;
 
   final Repository _repository = Repository();
-  final GiftController _giftController = GiftController(); // Instantiate the controller
-
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
+      setState(() {
+        _isLoading = true;
+      });
 
       final newGift = Gift(
         id: null, // ID is auto-generated
@@ -39,25 +43,61 @@ class _AddGiftPageState extends State<AddGiftPage> {
         status: 'available', // Default status to "available"
         price: _price,
         isPledged: false,
-        imageUrl: _imageBase64, // Use _imageBase64 instead of URL
+        imageUrl: _imageBase64,
         docId: null,
       );
 
-      if (widget.isPrivate) {
-        await _repository.insertLocalGift(newGift);
-      } else {
-        await _repository.insertGift(newGift);
+      try {
+        if (widget.isPrivate) {
+          await _repository.insertLocalGift(newGift);
+        } else {
+          await _repository.insertGift(newGift);
+        }
+        Navigator.pop(context);
+      } catch (e) {
+        //print('Error adding gift: $e');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
-
-      Navigator.pop(context);
     }
   }
 
   Future<void> _pickAndUploadImage() async {
-    final imageBase64 = await _repository.pickAndConvertImageToBase64();
-    if (imageBase64 != null) {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
+
+    if (pickedFile != null) {
+      final File file = File(pickedFile.path);
+      final bytes = await file.readAsBytes();
+
+      // Convert image to (JPEG)
+      img.Image? image = img.decodeImage(bytes);
+      if (image != null) {
+        final jpgBytes = img.encodeJpg(image, quality: 75);
+        final base64String = base64Encode(jpgBytes);
+
+        setState(() {
+          _imageBase64 = base64String;
+          _isLoading = false;
+        });
+      } else {
+        //print('Failed to decode image');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
       setState(() {
-        _imageBase64 = imageBase64;
+        _isLoading = false;
       });
     }
   }
@@ -67,7 +107,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Gift', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.amber[700],
+        backgroundColor: Colors.amber[800],
         elevation: 10.0,
         shadowColor: Colors.black,
         flexibleSpace: Container(
@@ -165,21 +205,26 @@ class _AddGiftPageState extends State<AddGiftPage> {
                 if (_imageBase64 != null)
                   Image.memory(base64Decode(_imageBase64!)),
                 const SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[800],
-                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0)),
-                    ),
-                    child: const Text(
-                      'Add Gift',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                if (_isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                if (!_isLoading)
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber[800],
+                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0)),
+                      ),
+                      child: const Text(
+                        'Add Gift',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

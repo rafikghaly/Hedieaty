@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import '../models/gift.dart';
 import 'package:hedieaty/controllers/repository.dart';
 
@@ -20,6 +23,8 @@ class _EditGiftPageState extends State<EditGiftPage> {
   late String _category;
   late double _price;
   late String? _imageBase64;
+  bool _isLoading = false;
+
   final Repository _repository = Repository();
 
   @override
@@ -35,6 +40,9 @@ class _EditGiftPageState extends State<EditGiftPage> {
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
+      setState(() {
+        _isLoading = true;
+      });
 
       final updatedGift = Gift(
         id: widget.gift.id,
@@ -49,24 +57,61 @@ class _EditGiftPageState extends State<EditGiftPage> {
         docId: widget.gift.docId,
       );
 
-      if (updatedGift.docId == null) {
-        // Local gift, update in local database
-        await _repository.updateLocalGiftTable(updatedGift);
-      } else {
-        // Non-local gift, update in Firestore
-        await _repository.updateGift(updatedGift);
-      }
+      try {
+        if (updatedGift.docId == null) {
+          // Local gift, update in local database
+          await _repository.updateLocalGiftTable(updatedGift);
+        } else {
+          // Non-local gift, update in Firestore
+          await _repository.updateGift(updatedGift);
+        }
 
-      widget.onGiftEdited(updatedGift);
-      Navigator.pop(context, true);
+        widget.onGiftEdited(updatedGift);
+        Navigator.pop(context, true);
+      } catch (e) {
+        //print('Error editing gift: $e');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _pickAndUploadImage() async {
-    final imageBase64 = await _repository.pickAndConvertImageToBase64();
-    if (imageBase64 != null) {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
+
+    if (pickedFile != null) {
+      final File file = File(pickedFile.path);
+      final bytes = await file.readAsBytes();
+
+      // Convert image to (JPEG)
+      img.Image? image = img.decodeImage(bytes);
+      if (image != null) {
+        final jpgBytes = img.encodeJpg(image, quality: 75);
+        final base64String = base64Encode(jpgBytes);
+
+        setState(() {
+          _imageBase64 = base64String;
+          _isLoading = false;
+        });
+      } else {
+        //print('Failed to decode image');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
       setState(() {
-        _imageBase64 = imageBase64;
+        _isLoading = false;
       });
     }
   }
@@ -75,8 +120,8 @@ class _EditGiftPageState extends State<EditGiftPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Gift',style: TextStyle(color: Colors.white )),
-        backgroundColor: Colors.amber[700],
+        title: const Text('Edit Gift', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.amber[800],
         elevation: 10.0,
         shadowColor: Colors.black,
         actions: [
@@ -186,22 +231,27 @@ class _EditGiftPageState extends State<EditGiftPage> {
                 if (_imageBase64 != null)
                   Image.memory(base64Decode(_imageBase64!)),
                 const SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[800],
-                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+                if (_isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                if (!_isLoading)
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber[800],
+                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                      child: const Text(
+                        'Save Changes',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
-                    child: const Text(
-                      'Save Changes',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
                   ),
-                ),
               ],
             ),
           ),
