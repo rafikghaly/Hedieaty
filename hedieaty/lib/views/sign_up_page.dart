@@ -8,8 +8,7 @@ class SignUpPage extends StatelessWidget {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController preferencesController = TextEditingController();
-  final TextEditingController phoneNumberController = TextEditingController(); // Add phone number controller
+  final TextEditingController phoneNumberController = TextEditingController();
 
   final Repository _repository = Repository();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -24,7 +23,7 @@ class SignUpPage extends StatelessWidget {
     final name = nameController.text;
     final email = emailController.text;
     final password = passwordController.text;
-    final preferences = preferencesController.text;
+    const preferences = 'darkMode=false';
     final phoneNumber = phoneNumberController.text;
 
     var connectivityResult = await (Connectivity().checkConnectivity());
@@ -175,17 +174,6 @@ class SignUpPage extends StatelessWidget {
                       prefixIcon: const Icon(Icons.phone),
                     ),
                     validator: _validatePhoneNumber,
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: preferencesController,
-                    decoration: InputDecoration(
-                      labelText: 'Preferences',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      prefixIcon: const Icon(Icons.list),
-                    ),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(

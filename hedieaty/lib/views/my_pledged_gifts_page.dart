@@ -126,7 +126,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                       if (gift.isPurchased) {
                         cardColor = Colors.red[200]!;
                       } else {
-                        cardColor = Colors.lightGreen[200]!;
+                        cardColor = Colors.lightGreen[300]!;
                       }
 
                       return Card(
@@ -150,9 +150,10 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                                   ),
                                 )
                               : gift.isPurchased
-                                  ? const Icon(
+                                  ?  Icon(
                                       Icons.card_giftcard,
                                       size: 40.0,
+                                      color: Theme.of(context).iconTheme.color,
                                     )
                                   : Icon(
                                       Icons.card_giftcard,
@@ -169,12 +170,48 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Category: ${gift.category}'),
-                              Text('Status: ${gift.status}'),
-                              Text('Description: ${gift.description}'),
-                              Text('Price: \$${gift.price.toStringAsFixed(2)}'),
-                              Text('Friend: $friendName'),
-                              Text('Due Date: $dueDate'),
+                              Text(
+                                'Category: ${gift.category}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                ),
+                              ),
+                              Text(
+                                'Status: ${gift.status}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                ),
+                              ),
+                              Text(
+                                'Description: ${gift.description}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                ),
+                              ),
+                              Text(
+                                'Price: \$${gift.price.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                ),
+                              ),
+                              Text(
+                                'Friend: $friendName',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                ),
+                              ),
+                              Text(
+                                'Due Date: $dueDate',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                ),
+                              ),
                             ],
                           ),
                           onTap: () {

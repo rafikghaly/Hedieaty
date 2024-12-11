@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
@@ -12,6 +13,7 @@ import 'my_pledged_gifts_page.dart';
 import 'local_events_page.dart';
 import 'edit_user_info_page.dart';
 import 'package:hedieaty/controllers/repository.dart';
+import 'package:hedieaty/controllers/theme_notifier.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userName;
@@ -103,6 +105,14 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _pickAndSaveImage() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult[0] == ConnectivityResult.none) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot proceed while offline. Please check your network connection.')),
+      );
+      return;
+    }
+
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
@@ -183,184 +193,180 @@ class _ProfilePageState extends State<ProfilePage> {
       body: SizedBox(
         child: SingleChildScrollView(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Column(
-                    children: [
-                      SingleChildScrollView(
-                        child: GestureDetector(
-                          onTap: _pickAndSaveImage,
-                          child: Stack(
-                            children: [
-                              SingleChildScrollView(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    if (_profileImageBase64.isEmpty) {
-                                      _pickAndSaveImage();
-                                    } else {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) => Dialog(
-                                          child: Stack(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+          SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Column(
+              children: [
+                SingleChildScrollView(
+                  child: GestureDetector(
+                    onTap: _pickAndSaveImage,
+                    child: Stack(
+                      children: [
+                        SingleChildScrollView(
+                          child: GestureDetector(
+                            onTap: () {
+                              if (_profileImageBase64.isEmpty) {
+                                _pickAndSaveImage();
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Dialog(
+                                    child: Stack(
+                                      children: [
+                                        SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              SingleChildScrollView(
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Image.memory(base64Decode(_profileImageBase64)),
-                                                  ],
-                                                ),
-                                              ),
-                                              Positioned(
-                                                top: 10,
-                                                right: 10,
-                                                child: IconButton(
-                                                  icon: const Icon(Icons.edit, color: Colors.white, size: 30),
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                    _pickAndSaveImage();
-                                                  },
-                                                  padding: const EdgeInsets.all(0),
-                                                  constraints: const BoxConstraints(),
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
+                                              Image.memory(base64Decode(_profileImageBase64)),
                                             ],
                                           ),
                                         ),
-                                      );
-                                    }
-                                  },
-                                  child: CircleAvatar(
-                                    radius: 70,
-                                    backgroundImage: _profileImageBase64.isNotEmpty
-                                        ? _decodeProfileImage(_profileImageBase64)
-                                        : const AssetImage('assets/images/profile-default.png'),
+                                        Positioned(
+                                          top: 10,
+                                          right: 10,
+                                          child: IconButton(
+                                            icon: const Icon(Icons.edit, color: Colors.white, size: 30),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              _pickAndSaveImage();
+                                            },
+                                            padding: const EdgeInsets.all(0),
+                                            constraints: const BoxConstraints(),
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-                                  onPressed: _pickAndSaveImage,
-                                  padding: const EdgeInsets.all(0),
-                                  constraints: const BoxConstraints(),
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-
-
-
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(_userName,
-                          style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black)),
-                      Text(_email,
-                          style:
-                          const TextStyle(fontSize: 16, color: Colors.black45)),
-                      Text(_phoneNumber,
-                          style:
-                          const TextStyle(fontSize: 16, color: Colors.black45)),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: _editUserInfo,
-                        icon: const Icon(Icons.edit, color: Colors.white),
-                        label: const Text('Edit Personal Information',
-                            style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrangeAccent[100],
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
+                                );
+                              }
+                            },
+                            child: CircleAvatar(
+                              radius: 70,
+                              backgroundImage: _profileImageBase64.isNotEmpty
+                                  ? _decodeProfileImage(_profileImageBase64)
+                                  : const AssetImage('assets/images/profile-default.png'),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 40), // Added extra space to push buttons down
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_firebaseId != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    MyPledgedGiftsPage(userId: _firebaseId!,username: _userName,),
-                              ),
-                            );
-                          } else {
-                            // Handle case where firebaseUid is null
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('User ID is not available.')),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrangeAccent[100],
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                            onPressed: _pickAndSaveImage,
+                            padding: const EdgeInsets.all(0),
+                            constraints: const BoxConstraints(),
+                            color: Colors.grey,
                           ),
                         ),
-                        child: const Text('My Pledged Gifts',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white)),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_firebaseId != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    LocalEventsPage(userId: _firebaseId!),
-                              ),
-                            );
-                          } else {
-                            // Handle case where firebaseUid is null
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('User ID is not available.')),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrangeAccent[100],
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        child: const Text('My Private Events',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white)),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                Text(_userName,
+                    style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold)),
+                Text(_email,
+                    style: const TextStyle(fontSize: 16,fontWeight: FontWeight.w300)),
+                Text(_phoneNumber,
+                    style:  const TextStyle(fontSize: 16, fontWeight: FontWeight.w300 )),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: _editUserInfo,
+                  icon: const Icon(Icons.edit, color: Colors.white),
+                  label: const Text('Edit Personal Information',
+                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrangeAccent[100],
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_firebaseId != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              MyPledgedGiftsPage(userId: _firebaseId!, username: _userName),
+                        ),
+                      );
+                    } else {
+                      // Handle case where firebaseUid is null
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('User ID is not available.')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrangeAccent[100],
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text('My Pledged Gifts',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_firebaseId != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              LocalEventsPage(userId: _firebaseId!),
+                        ),
+                      );
+                    } else {
+                      // Handle case where firebaseUid is null
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('User ID is not available.')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrangeAccent[100],
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text('My Private Events',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                ),
+                const SizedBox(height: 20),
+                 // DON'T MAKE CONST!!
+                 ListTile(
+                  title: Text('Dark Mode'),
+                  trailing: ThemeSwitch(),
+                ),
+              ],
+            ),
           ),
+          )],
         ),
       ),
+    ),
     );
   }
 }
+
+

@@ -3,10 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:connectivity_plus/connectivity_plus.dart'; // For checking internet connectivity
 import 'package:hedieaty/controllers/repository.dart';
+import '../controllers/theme_notifier.dart';
 import '../models/user.dart';
 import 'sign_up_page.dart';
 import '../main.dart';
 import 'package:hedieaty/controllers/sync_controller.dart';
+import 'package:provider/provider.dart';
 
 class SignInPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -47,8 +49,7 @@ class SignInPage extends StatelessWidget {
       // Device is offline, use local authentication
       User? user = await _repository.authenticateUser(email, password);
       if (user != null) {
-        await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode, user.phoneNumber!); // Save user ID and name
-        // Show offline login message
+        await _handleUserSignIn(context, user);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Logged in offline. Limited functionality available.')),
         );
@@ -72,7 +73,7 @@ class SignInPage extends StatelessWidget {
         User? user = await _repository.authenticateUser(email, password);
         // print(user);
         if (user != null) {
-          await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode, user.phoneNumber!); // Save user ID and name
+          await _handleUserSignIn(context, user);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const MainPage()),
@@ -83,31 +84,22 @@ class SignInPage extends StatelessWidget {
           );
         }
       } catch (e) {
-        // Handle network error appropriately by falling back to local authentication
-        if (e.toString().contains('network error')) {
-          User? user = await _repository.authenticateUser(email, password);
-          if (user != null) {
-            await _saveUserLogin(user.id!, user.name, user.email,user.firebaseUid.hashCode, user.phoneNumber!); // Save user ID and name
-            // Show offline login message
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Logged in offline due to network error. Limited functionality available.')),
-            );
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MainPage()),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Invalid email or password. Note: Email might not be registered offline.')),
-            );
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sign in failed: $e')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign in failed: $e')),
+        );
       }
     }
+  }
+
+  Future<void> _handleUserSignIn(BuildContext context, User user) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? savedUserId = prefs.getInt('userId');
+
+    if (savedUserId != null && savedUserId != user.id) {
+      await prefs.clear();
+    }
+
+    await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode, user.phoneNumber!);
   }
 
   @override

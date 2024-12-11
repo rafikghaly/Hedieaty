@@ -391,9 +391,9 @@ class _GiftListPageState extends State<GiftListPage> {
                   if (gift.isPurchased) {
                     cardColor = Colors.red[200]!;
                   } else if (gift.isPledged) {
-                    cardColor = Colors.lightGreen[200]!;
+                    cardColor = Colors.lightGreen[300]!;
                   } else {
-                    cardColor = Colors.white;
+                    cardColor = Theme.of(context).cardColor;
                   }
 
                   return Card(
@@ -409,23 +409,57 @@ class _GiftListPageState extends State<GiftListPage> {
                           ? Image.memory(base64Decode(gift.imageUrl!),
                               fit: BoxFit.cover, width: 50, height: 50)
                           : gift.isPurchased
-                              ? const Icon(Icons.card_giftcard, size: 40.0)
+                              ? Icon(Icons.card_giftcard, size: 40.0,
+                        color: Theme.of(context).iconTheme.color,
+                      )
                               : Icon(Icons.card_giftcard,
                                   size: 40.0, color: Colors.amber[800]),
-                      title: Text(gift.name,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18.0)),
+                      title: Text(
+                        gift.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18.0,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                      ),
+
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Category: ${gift.category}'),
-                          Text('Status: ${gift.status}'),
-                          Text('Description: ${gift.description}'),
-                          Text('Price: \$${gift.price.toStringAsFixed(2)}'),
+                          Text(
+                            'Category: ${gift.category}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                color: Theme.of(context).textTheme.bodyLarge?.color),
+                          ),
+                          Text(
+                            'Status: ${gift.status}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                color: Theme.of(context).textTheme.bodyLarge?.color),
+                          ),
+                          Text(
+                            'Description: ${gift.description}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                color: Theme.of(context).textTheme.bodyLarge?.color),
+                          ),
+                          Text(
+                            'Price: \$${gift.price.toStringAsFixed(2)}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                color: Theme.of(context).textTheme.bodyLarge?.color),
+                          ),
                           if (gift.isPledged)
-                            Text('Pledged by: $pledgedUserName'),
+                            Text(
+                              'Pledged by: $pledgedUserName',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color),
+                            ),
                         ],
                       ),
+
                       onTap: () {
                         Navigator.push(
                           context,

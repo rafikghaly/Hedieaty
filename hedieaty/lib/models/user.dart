@@ -3,7 +3,7 @@ class User {
   final String firebaseUid;
   final String name;
   final String email;
-  final String preferences;
+  String preferences;
   String password;
   final String? profileImageBase64;
   final String? phoneNumber;
@@ -43,5 +43,17 @@ class User {
       'password': password,
       'profileImageBase64': profileImageBase64,
     };
+  }
+
+  bool get isDarkMode {
+    return preferences.contains('darkMode=true');
+  }
+
+  void setDarkMode(bool isDarkMode) {
+    if (isDarkMode) {
+      preferences = 'darkMode=true';
+    } else {
+      preferences = 'darkMode=false';
+    }
   }
 }
