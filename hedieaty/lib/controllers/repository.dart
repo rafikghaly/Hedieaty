@@ -356,18 +356,6 @@ class Repository {
     return null;
   }
 
-  Future<String?> pickAndConvertImageToBase64() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      final File file = File(pickedFile.path);
-      final bytes = await file.readAsBytes();
-      return base64Encode(bytes);
-    }
-    return null;
-  }
-
   // Notifications
   Future<void> makeNotificationPledge(int eventId, String pledgerName, String giftName) async {
     User? user = await _userController.getUserByEventId(eventId);

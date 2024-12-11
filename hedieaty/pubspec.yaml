@@ -44,7 +44,10 @@ dependencies:
   workmanager: ^0.5.2
   intl: ^0.20.1
   image: ^4.3.0
-  provider: ^6.1.2
+  provider: ^6.1.2 #for state management for the darkTheme
+  permission_handler: ^11.3.1
+  device_info_plus: ^11.1.1
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

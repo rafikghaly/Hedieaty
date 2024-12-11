@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import '../controllers/permissions.dart';
 import '../models/gift.dart';
 import 'package:hedieaty/controllers/repository.dart';
 
@@ -97,36 +98,44 @@ class _EditGiftPageState extends State<EditGiftPage> {
       _isLoading = true;
     });
 
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50,
-    );
+    if (await Permissions.requestPermissions(context)) {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50,
+      );
 
-    if (pickedFile != null) {
-      final File file = File(pickedFile.path);
-      final bytes = await file.readAsBytes();
+      if (pickedFile != null) {
+        final File file = File(pickedFile.path);
+        final bytes = await file.readAsBytes();
 
-      // Convert image to (JPEG)
-      img.Image? image = img.decodeImage(bytes);
-      if (image != null) {
-        final jpgBytes = img.encodeJpg(image, quality: 75);
-        final base64String = base64Encode(jpgBytes);
+        // Convert image to (JPEG)
+        img.Image? image = img.decodeImage(bytes);
+        if (image != null) {
+          final jpgBytes = img.encodeJpg(image, quality: 75);
+          final base64String = base64Encode(jpgBytes);
 
-        setState(() {
-          _imageBase64 = base64String;
-          _isLoading = false;
-        });
+          setState(() {
+            _imageBase64 = base64String;
+            _isLoading = false;
+          });
+        } else {
+          //print('Failed to decode image');
+          setState(() {
+            _isLoading = false;
+          });
+        }
       } else {
-        //print('Failed to decode image');
         setState(() {
           _isLoading = false;
         });
       }
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
+    }
+    else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(
+            'Permissions denied. Cannot access Gallery.')),
+      );
     }
   }
 

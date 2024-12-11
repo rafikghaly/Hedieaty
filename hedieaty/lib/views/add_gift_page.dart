@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import '../controllers/permissions.dart';
 import '../models/gift.dart';
 import 'package:hedieaty/controllers/repository.dart';
 
@@ -90,42 +91,49 @@ class _AddGiftPageState extends State<AddGiftPage> {
       });
     }
 
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50,
-    );
+    if (await Permissions.requestPermissions(context)) {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50,
+      );
 
-    if (pickedFile != null) {
-      final File file = File(pickedFile.path);
-      final bytes = await file.readAsBytes();
+      if (pickedFile != null) {
+        final File file = File(pickedFile.path);
+        final bytes = await file.readAsBytes();
 
-      // Convert image to (JPEG)
-      img.Image? image = img.decodeImage(bytes);
-      if (image != null) {
-        final jpgBytes = img.encodeJpg(image, quality: 75);
-        final base64String = base64Encode(jpgBytes);
+        // Convert image to (JPEG)
+        img.Image? image = img.decodeImage(bytes);
+        if (image != null) {
+          final jpgBytes = img.encodeJpg(image, quality: 75);
+          final base64String = base64Encode(jpgBytes);
 
-        if (mounted) {
-          setState(() {
-            _imageBase64 = base64String;
-            _isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              _imageBase64 = base64String;
+              _isLoading = false;
+            });
+          }
+        } else {
+          //print('Failed to decode image');
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
         }
       } else {
-        //print('Failed to decode image');
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
         }
       }
-    } else {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    }else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(
+            'Permissions denied. Gallery.')),
+      );
     }
   }
 
@@ -133,6 +141,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Add Gift', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[800],
         elevation: 10.0,

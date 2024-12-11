@@ -14,6 +14,7 @@ import 'local_events_page.dart';
 import 'edit_user_info_page.dart';
 import 'package:hedieaty/controllers/repository.dart';
 import 'package:hedieaty/controllers/theme_notifier.dart';
+import 'package:hedieaty/controllers//permissions.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userName;
@@ -113,11 +114,12 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
 
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50,
-    );
+    if (await Permissions.requestPermissions(context)) {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50,
+      );
 
     if (pickedFile != null) {
       final File file = File(pickedFile.path);
@@ -139,6 +141,16 @@ class _ProfilePageState extends State<ProfilePage> {
       } else {
         //print('Failed to decode image');
       }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No image selected.')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(
+            'Permissions denied. Cannot access Gallery.')),
+      );
     }
   }
 
