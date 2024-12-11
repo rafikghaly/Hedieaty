@@ -45,17 +45,28 @@ class _EditEventPageState extends State<EditEventPage> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    DateTime currentDate = DateTime.now();
+    DateTime eventDate;
+
+    try {
+      eventDate = DateTime.parse(widget.event.date.split(' ').first);
+    } catch (e) {
+      eventDate = currentDate;
+    }
+
+    DateTime initialDate = eventDate.isBefore(currentDate) ? currentDate : eventDate;
+
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: initialDate,
+      firstDate: currentDate,
       lastDate: DateTime(2101),
     );
 
-    if (picked != null && picked != _selectedDate) {
+    if (pickedDate != null && pickedDate != eventDate) {
       setState(() {
-        _selectedDate = picked;
-        _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _selectedDate = pickedDate;
+        _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
       });
     }
   }
