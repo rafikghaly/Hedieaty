@@ -51,10 +51,19 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _fetchFriends() async {
     List<Friend> friends = await _repository.getFriends(widget.firebaseId);
-    setState(() {
-      filteredFriends = friends;
-    });
+    if (mounted) {
+      setState(() {
+        filteredFriends = friends;
+      });
+    }
   }
+
+  @override
+  void dispose()
+  {
+    super.dispose();
+  }
+
 
   void _fetchUserEvents() async {
     List<Event> events = await _repository.getEvents(userId: widget.firebaseId);

@@ -72,9 +72,14 @@ class SignInPage extends StatelessWidget {
         );
 
         User? user = await _repository.authenticateUser(email, password);
-        // print(user);
+        // print(user?.id!);
         if (user != null) {
           await _handleUserSignIn(context, user);
+
+          // Load user preferences
+          final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+          themeNotifier.loadUserPreferences(user.id.toString());
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const MainPage()),
@@ -97,7 +102,7 @@ class SignInPage extends StatelessWidget {
     int? savedUserId = prefs.getInt('userId');
 
     if (savedUserId != null && savedUserId != user.id) {
-      //await prefs.clear();
+     await prefs.clear();
     }
 
     await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode, user.phoneNumber!, user.preferences);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:hedieaty/views/custom_page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -44,18 +45,10 @@ void main() async {
   await Firebase.initializeApp();
   await DatabaseInitializer().database;
 
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  int? userId = prefs.getInt('userId');
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) {
-        ThemeNotifier themeNotifier = ThemeNotifier();
-        if (userId != null) {
-          themeNotifier.loadUserPreferences(userId.toString());
-        }
-        return themeNotifier;
-      },
+      create: (_) => ThemeNotifier(),
       child: const MyApp(),
     ),
   );
@@ -146,8 +139,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
 
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Hedieaty',
       theme: ThemeData(
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadePageTransition(),
+            TargetPlatform.iOS: FadePageTransition(),
+          },
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
           brightness: Brightness.light,
@@ -160,6 +159,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadePageTransition(),
+            TargetPlatform.iOS: FadePageTransition(),
+          },
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
           brightness: Brightness.dark,
@@ -175,6 +180,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       home: SignInPage(),
     );
   }
+
 }
 
 class MainPage extends StatefulWidget {
@@ -186,6 +192,8 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
+  final PageController _pageController = PageController();
+
   Future<List<Friend>>? _friends;
   Future<List<Event>>? _events;
   int? _userId;
@@ -228,69 +236,73 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _selectedIndex = index;
     });
+    _pageController.jumpToPage(index);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
         children: [
           _userId == null
               ? const Center(child: CircularProgressIndicator())
               : _userId == -1
-                  ? SignInPage()
-                  : FutureBuilder<List<Friend>>(
-                      future: _friends,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return Center(
-                              child: Text('Error: ${snapshot.error}'));
-                        } else if (snapshot.hasData) {
-                          List<Friend> friends = snapshot.data!;
-                          return HomePage(
-                            friends: friends,
-                            userId: _userId!,
-                            firebaseId: _firebaseId!,
-                          );
-                        } else {
-                          return const Center(
-                              child: Text('No friends available.'));
-                        }
-                      },
-                    ),
+              ? SignInPage()
+              : FutureBuilder<List<Friend>>(
+            future: _friends,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (snapshot.hasData) {
+                List<Friend> friends = snapshot.data!;
+                return HomePage(
+                  friends: friends,
+                  userId: _userId!,
+                  firebaseId: _firebaseId!,
+                );
+              } else {
+                return const Center(child: Text('No friends available.'));
+              }
+            },
+          ),
           _userId == null
               ? const Center(child: CircularProgressIndicator())
               : _userId == -1
-                  ? SignInPage()
-                  : FutureBuilder<List<Event>>(
-                      future: _events,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return Center(
-                              child: Text('Error: ${snapshot.error}'));
-                        } else if (snapshot.hasData) {
-                          List<Event> events = snapshot.data!;
-                          return EventListPage(
-                            events: events,
-                            userId: _userId!,
-                            isOwner: true,
-                            firebaseId: _firebaseId!,
-                          );
-                        } else {
-                          return const Center(
-                              child: Text('No events available.'));
-                        }
-                      },
-                    ),
+              ? SignInPage()
+              : FutureBuilder<List<Event>>(
+            future: _events,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (snapshot.hasData) {
+                List<Event> events = snapshot.data!;
+                return EventListPage(
+                  events: events,
+                  userId: _userId!,
+                  isOwner: true,
+                  firebaseId: _firebaseId!,
+                );
+              } else {
+                return const Center(child: Text('No events available.'));
+              }
+            },
+          ),
           ProfilePage(
             userName: _userName ?? '',
             email: _email ?? '',

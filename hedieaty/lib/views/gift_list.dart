@@ -474,9 +474,13 @@ class _GiftListPageState extends State<GiftListPage> {
                 },
               ),
       ),
-      floatingActionButton: widget.isOwner
+      floatingActionButton: widget.isOwner && _event?.status!="Past"
           ? FloatingActionButton(
               onPressed: () {
+                if(_event?.status=="Past")
+                  {
+                    return; // If users tries to add when Past
+                  }
                 Navigator.push(
                   context,
                   MaterialPageRoute(
