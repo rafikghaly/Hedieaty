@@ -105,6 +105,7 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('My Private Events',style: TextStyle(color: Colors.white )),
         backgroundColor: Colors.amber[700],
         elevation: 10.0,

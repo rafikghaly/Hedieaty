@@ -11,6 +11,7 @@ class GiftDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title:
             const Text('Gift Details', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[700],

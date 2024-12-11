@@ -90,6 +90,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('My Pledged Gifts',
             style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[700],

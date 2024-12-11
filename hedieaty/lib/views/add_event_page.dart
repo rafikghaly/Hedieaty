@@ -137,6 +137,7 @@ class _AddEventPageState extends State<AddEventPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Add Event', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[700],
         elevation: 10.0,

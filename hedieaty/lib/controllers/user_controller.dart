@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:crypto/crypto.dart';
@@ -168,7 +166,6 @@ class UserController {
           .doc(docSnapshot.id)
           .update({
         'name': user.name,
-        'email': user.email,
         'phoneNumber': user.phoneNumber,
       });
       // print('User updated successfully');

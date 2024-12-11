@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import 'package:hedieaty/controllers/repository.dart';
-import '../controllers/user_controller.dart';
 
 class EditUserInfoPage extends StatefulWidget {
   final User user;
@@ -15,18 +14,15 @@ class EditUserInfoPage extends StatefulWidget {
 class _EditUserInfoPageState extends State<EditUserInfoPage> {
   final _formKey = GlobalKey<FormState>();
   late String? _userName;
-  late String? _email;
   late String? _preferences;
   late String? _phoneNumber;
   late String? _password;
   final Repository _repository = Repository();
-  final UserController _userController = UserController();
 
   @override
   void initState() {
     super.initState();
     _userName = widget.user.name;
-    _email = widget.user.email;
     _preferences = widget.user.preferences;
     _phoneNumber = widget.user.phoneNumber;
     _password = null;
@@ -36,7 +32,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      if (_userName == widget.user.name && _email == widget.user.email && _phoneNumber == widget.user.phoneNumber) {
+      if (_userName == widget.user.name && _phoneNumber == widget.user.phoneNumber) {
         showDialog(
           context: context,
           builder: (context) {
@@ -54,37 +50,11 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         );
         return;
       }
-
-      if (_email != widget.user.email) {
-        bool emailExists = await _userController.emailExists(_email ?? '', widget.user.firebaseUid.hashCode);
-
-        if (emailExists) {
-          // Alert if the email already exists
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Email Exists'),
-                content: const Text('The email you entered is already in use. Please use a different email.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-          return;
-        }
-      }
-
-      // Update user information if the name, email, or phone number is different
       final updatedUser = User(
         id: widget.user.id,
         firebaseUid: widget.user.firebaseUid,
         name: _userName ?? widget.user.name,
-        email: _email ?? widget.user.email,
+        email: widget.user.email,
         phoneNumber: _phoneNumber ?? widget.user.phoneNumber,
         preferences: _preferences ?? widget.user.preferences,
         password: _password ?? widget.user.password,
@@ -94,17 +64,6 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
 
       Navigator.pop(context, updatedUser);
     }
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your email';
-    }
-    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!regex.hasMatch(value)) {
-      return 'Please enter a valid email';
-    }
-    return null;
   }
 
   String? _validatePhoneNumber(String? value) {
@@ -129,7 +88,8 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit User Information'),
+        automaticallyImplyLeading: false,
+        title: const Text('Edit User Information',style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[700],
         elevation: 10.0,
         shadowColor: Colors.black,
@@ -166,18 +126,6 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
                     _userName = value!.isEmpty ? null : value;
                   },
                   validator: _validateName,
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  initialValue: _email,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-                  ),
-                  onSaved: (value) {
-                    _email = value!.isEmpty ? null : value;
-                  },
-                  validator: _validateEmail,
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
