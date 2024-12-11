@@ -1,8 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../models/event.dart';
@@ -24,14 +20,14 @@ class Repository {
   final PledgedGiftController _pledgedGiftController = PledgedGiftController();
   final NotificationController _notificationController = NotificationController();
 
-  Future<bool> _isOnline() async {
+  Future<bool> isOnline() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     return connectivityResult[0] != ConnectivityResult.none;
   }
 
   // User methods
   Future<void> registerUser(String email, String password, String name, String preferences, String phoneNumber) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       try {
         await _userController.registerUser(email, password, name, preferences, phoneNumber);
       } catch (e) {
@@ -47,7 +43,7 @@ class Repository {
   }
 
   Future<User?> getUserByEmail(String email) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _userController.getUserByEmailFirestore(email);
     } else {
       return await _userController.getUserByEmailLocal(email);
@@ -55,7 +51,7 @@ class Repository {
   }
 
   Future<User?> getUserById(int id) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _userController.getUserByIdFirestore(id);
     } else {
       return await _userController.getUserByIdLocal(id);
@@ -67,7 +63,7 @@ class Repository {
     return await _userController.getFriendNameByIdLocal(id);
   }
   Future<User?> getUserByFirebaseUid(String firebaseUid) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _userController.getUserByFirebaseUidFirestore(firebaseUid);
     } else {
       return await _userController.getUserByFirebaseUidLocal(firebaseUid);
@@ -75,7 +71,7 @@ class Repository {
   }
 
   Future<void> updateUser(User user) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _userController.updateUserFirestore(user);
     } else {
       throw Exception("Cannot update user while offline.");
@@ -83,7 +79,7 @@ class Repository {
   }
 
   Future<void> deleteUser(String firebaseUid) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _userController.deleteUserByFirebaseUidFirestore(firebaseUid);
     } else {
       throw Exception("Cannot delete user while offline.");
@@ -91,14 +87,14 @@ class Repository {
   }
 
   Future<List<User>> getUsers() async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _userController.usersFirestore();
     } else {
       return await _userController.usersLocal();
     }
   }
   Future<User?> getUserByPhoneNumber(String phoneNumber) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _userController.getUserByPhoneNumber(phoneNumber);
     } else{
       throw Exception("Cannot get user while offline.");
@@ -114,7 +110,7 @@ class Repository {
     //
     // // If online, insert event to Firestore and set Firestore doc ID as event ID
     // event.id = localId; // Ensure the ID is reset before setting it again
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _eventController.insertEventFirestore(event);
     } else {
       throw Exception("Cannot insert event while offline.");
@@ -122,7 +118,7 @@ class Repository {
   }
 
   Future<Event?> getEventById(int id) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _eventController.getEventByIdFirestore(id);
     } else {
       return await _eventController.getEventByIdLocal(id);
@@ -130,7 +126,7 @@ class Repository {
   }
 
   Future<List<Event>> getEvents({required int userId}) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _eventController.eventsFirestore(userId: userId);
     } else {
       return await _eventController.eventsLocal(userId: userId);
@@ -138,7 +134,7 @@ class Repository {
   }
 
   Future<void> updateEvent(Event event) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _eventController.updateEventFirestore(event);
     } else {
       throw Exception("Cannot update event while offline.");
@@ -146,7 +142,7 @@ class Repository {
   }
 
   Future<void> deleteEvent(String id) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _eventController.deleteEventFirestore(id);
     } else {
       throw Exception("Cannot delete event while offline.");
@@ -171,7 +167,7 @@ class Repository {
   }
 
   Future<void> publishEventTable(Event event) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _eventController.publishLocalEventTable(event);
     } else {
       throw Exception("Cannot publish event while offline.");
@@ -204,7 +200,7 @@ class Repository {
 
   // Friend methods
   Future<void> insertFriend(Friend friend) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _friendController.insertFriendFirestore(friend);
     } else {
       throw Exception("Cannot add friend while offline.");
@@ -213,7 +209,7 @@ class Repository {
 
   Future<void> addMutualFriends(
       int userId1, int userId2, String userName1, String userName2) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _friendController.addMutualFriendsLocal(
           userId1, userId2, userName1, userName2);
       await _friendController.addMutualFriendsFirestore(
@@ -224,7 +220,7 @@ class Repository {
   }
 
   Future<List<Friend>> getFriends(int userId) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _friendController.friendsFirestore(userId);
     } else {
       return await _friendController.friendsLocal(userId);
@@ -232,7 +228,7 @@ class Repository {
   }
 
   Future<void> updateFriend(Friend friend) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _friendController.updateFriendFirestore(friend);
     } else {
       throw Exception("Cannot update friend while offline.");
@@ -240,7 +236,7 @@ class Repository {
   }
 
   Future<void> deleteFriend(int id) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _friendController.deleteFriendFirestore(id);
     } else {
       throw Exception("Cannot delete friend while offline.");
@@ -251,7 +247,7 @@ class Repository {
   Future<void> insertGift(Gift gift) async {
     //TODO Use it when making an offline list of Events
     // await _giftController.insertGiftLocal(gift);
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _giftController.insertGiftFirestore(gift);
     } else {
       throw Exception("Cannot insert gift while offline.");
@@ -259,7 +255,7 @@ class Repository {
   }
 
   Future<List<Gift>> getGifts(int eventId) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _giftController.giftsFirestore(eventId);
     } else {
       return await _giftController.giftsLocal(eventId);
@@ -267,7 +263,7 @@ class Repository {
   }
 
   Future<Gift?> getGiftById(String id) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _giftController.getGiftByIdFirestore(id);
     } else {
       //TODO return await _giftController.getGiftByIdLocal(id);//TODO Change the id into string
@@ -280,7 +276,7 @@ class Repository {
   }
 
   Future<void> updateGift(Gift gift) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _giftController.updateGiftFirestore(gift);
     } else {
       throw Exception("Cannot update gift while offline.");
@@ -288,7 +284,7 @@ class Repository {
   }
 
   Future<void> markGiftAsPurchased(String? giftId) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _giftController.markGiftAsPurchased(giftId);
     } else {
       throw Exception("Cannot purchase gift while offline.");
@@ -296,7 +292,7 @@ class Repository {
   }
 
   Future<void> deleteGift(String id) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _giftController.deleteGiftFirestore(id);
     } else {
       throw Exception("Cannot delete gift while offline.");
@@ -306,7 +302,7 @@ class Repository {
 
   // PledgedGift methods
   Future<void> insertPledgedGift(PledgedGift pledgedGift) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _pledgedGiftController.insertPledgedGiftFirestore(pledgedGift);
     } else {
       throw Exception("Cannot insert pledged gift while offline.");
@@ -314,7 +310,7 @@ class Repository {
   }
 
   Future<List<PledgedGift>> getPledgedGiftsForUser(int userId) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _pledgedGiftController
           .getPledgedGiftsForUserFirestore(userId);
     } else {
@@ -323,7 +319,7 @@ class Repository {
   }
 
   Future<List<PledgedGift>> getPledgedGiftsForEvent(int eventId) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _pledgedGiftController
           .getPledgedGiftsForEventFirestore(eventId);
     } else {
@@ -332,7 +328,7 @@ class Repository {
   }
 
   Future<void> deletePledgedGift(String id) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _pledgedGiftController.deletePledgedGiftFirestore(id);
     } else {
       throw Exception("Cannot delete pledged gift while offline.");
@@ -341,7 +337,7 @@ class Repository {
   }
 
   Future<void> saveImageToSharedPrefs(String firebaseUid) async{
-    if (await _isOnline()) {
+    if (await isOnline()) {
       await _userController.retrieveAndSaveProfileImage(firebaseUid);
     } else{
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -350,7 +346,7 @@ class Repository {
   }
 
   Future<String?> getUserProfileImage(int userId) async {
-    if (await _isOnline()) {
+    if (await isOnline()) {
       return await _userController.getUserProfileImage(userId);
     }
     return null;

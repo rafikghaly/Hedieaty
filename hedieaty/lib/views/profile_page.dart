@@ -219,11 +219,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         SingleChildScrollView(
                           child: GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               if (_profileImageBase64.isEmpty) {
                                 _pickAndSaveImage();
                               } else {
-                                showDialog(
+                                if(await _repository.isOnline()) {
+                                  showDialog(
                                   context: context,
                                   builder: (context) => Dialog(
                                     child: Stack(
@@ -254,6 +255,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                 );
+                                }
                               }
                             },
                             child: CircleAvatar(

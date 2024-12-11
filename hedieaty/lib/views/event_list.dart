@@ -88,7 +88,7 @@ class _EventListPageState extends State<EventListPage> {
           event: event,
           onEventEdited: (editedEvent) {
             _refreshEvents(); // Refresh the list after editing the event
-          },
+          }, isPrivateEvent: false,
         ),
       ),
     );
@@ -100,12 +100,19 @@ class _EventListPageState extends State<EventListPage> {
   }
 
   Future<void> _deleteEvent(Event event) async {
-    await _repository.deleteEvent(event.docId!);
-    setState(() {
-      _events.remove(event);
-    });
-    // After deletion, refresh the list from the database
-    _refreshEvents();
+    try {
+      await _repository.deleteEvent(event.docId!);
+      setState(() {
+        _events.remove(event);
+      });
+      // After deletion, refresh the list from the database
+      _refreshEvents();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(e.toString().replaceAll('Exception: ', '')))
+      );
+    }
   }
 
   @override
@@ -210,8 +217,13 @@ class _EventListPageState extends State<EventListPage> {
                           if(event.status!="Past")
                           IconButton(
                             icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              _editEvent(event);
+                            onPressed: () async {
+                              if(await _repository.isOnline())  _editEvent(event);
+                              else{
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Can\'t edit events while offline!')),
+                                );
+                              }
                             },
                           ),
                           IconButton(

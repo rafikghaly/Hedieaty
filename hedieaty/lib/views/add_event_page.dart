@@ -123,10 +123,18 @@ class _AddEventPageState extends State<AddEventPage> {
         const SnackBar(content: Text('Event saved locally.')),
       );
     } else {
-      await _repository.insertEvent(newEvent);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event published.')),
-      );
+      if(await _repository.isOnline()) {
+        await _repository.insertEvent(newEvent);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event published.')),
+        );
+      }
+      else{
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Can\'t publish event!. Check your network connection.' ),
+        ));
+        return;
+      }
     }
     widget.onEventAdded(newEvent); // Notify the parent about the new event
 

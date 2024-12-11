@@ -50,6 +50,13 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         );
         return;
       }
+      if (! await _repository.isOnline())
+        {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Can\'t edit while offline!')),
+          );
+          return;
+        }
 
       User? existingUser =
           await _repository.getUserByPhoneNumber(_phoneNumber ?? '');

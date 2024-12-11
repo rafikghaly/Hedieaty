@@ -6,8 +6,9 @@ import 'package:intl/intl.dart';
 class EditEventPage extends StatefulWidget {
   final Event event;
   final Function(Event) onEventEdited;
+  final bool isPrivateEvent;
 
-  const EditEventPage({super.key, required this.event, required this.onEventEdited});
+  const EditEventPage({super.key, required this.event, required this.onEventEdited, required this.isPrivateEvent});
 
   @override
   _EditEventPageState createState() => _EditEventPageState();
@@ -152,8 +153,7 @@ class _EditEventPageState extends State<EditEventPage> {
       userId: widget.event.userId,
       gifts: widget.event.gifts,
     );
-
-    await _repository.updateEvent(updatedEvent);
+    if(!widget.isPrivateEvent) await _repository.updateEvent(updatedEvent);
     widget.onEventEdited(updatedEvent);
     Navigator.pop(context);
   }
@@ -162,6 +162,7 @@ class _EditEventPageState extends State<EditEventPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Edit Event',style: TextStyle(color: Colors.white )),
         backgroundColor: Colors.amber[700],
         elevation: 10.0,

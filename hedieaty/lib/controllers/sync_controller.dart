@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hedieaty/init_database.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SyncController {
@@ -54,36 +53,36 @@ class SyncController {
     var pledgedGifts = pledgedGiftsSnapshot.docs.map((doc) => doc.data()).toList();
 
     // Fetch friends associated with the user
-    var friendsSnapshot = await FirebaseFirestore.instance
+    var friendsSnapshotUserId1 = await FirebaseFirestore.instance
+        .collection('friends')
+        .where('userId1', isEqualTo: userId)
+        .get();
+    var friendsSnapshotUserId2 = await FirebaseFirestore.instance
         .collection('friends')
         .where('userId2', isEqualTo: userId)
         .get();
-    var friends = friendsSnapshot.docs.map((doc) => doc.data()).toList();
 
-    if (friends.isEmpty) {
-      friendsSnapshot = await FirebaseFirestore.instance
-          .collection('friends')
-          .where('userId1', isEqualTo: userId)
-          .get();
-      friends = friendsSnapshot.docs.map((doc) => doc.data()).toList();
-    }
+    var friends = friendsSnapshotUserId1.docs.map((doc) => doc.data()).toList();
+    friends.addAll(friendsSnapshotUserId2.docs.map((doc) => doc.data()).toList());
 
     // Fetch friend user data
     List<Map<String, dynamic>> friendUsers = [];
     for (var friend in friends) {
+      var friendUserId = friend['userId1'] == userId ? friend['userId2'] : friend['userId1'];
       var friendUserSnapshot = await FirebaseFirestore.instance
           .collection('users')
-          .where('id', isEqualTo: friend['userId2'])
+          .where('id', isEqualTo: friendUserId)
           .get();
       friendUsers.addAll(friendUserSnapshot.docs.map((doc) => doc.data()).toList());
     }
 
     // Fetch friends' events and gifts
     for (var friend in friends) {
+      var friendUserId = friend['userId1'] == userId ? friend['userId2'] : friend['userId1'];
       // Fetch events associated with the friend
       var friendEventsSnapshot = await FirebaseFirestore.instance
           .collection('events')
-          .where('userId', isEqualTo: friend['userId2'])
+          .where('userId', isEqualTo: friendUserId)
           .get();
       var friendEvents = friendEventsSnapshot.docs.map((doc) => doc.data()).toList();
       events.addAll(friendEvents);

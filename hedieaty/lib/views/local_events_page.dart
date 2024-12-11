@@ -49,15 +49,25 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
   }
 
   Future<void> _publishEvent(Event event) async {
-    try {
-      await _repository.publishEventTable(event);
-      _fetchLocalEvents();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event published successfully!')),
-      );
-    } catch (e) {
-      // Handle the error
-    }
+    if(await _repository.isOnline())
+      {
+        try {
+          await _repository.publishEventTable(event);
+          _fetchLocalEvents();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event published successfully!')),
+          );
+        } catch (e) {
+          // Handle the error
+        }
+      }
+    else
+      {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Can\'t publish while offline!')),
+        );
+      }
+
   }
 
   void _editLocalEvent(Event event) async {
@@ -69,7 +79,7 @@ class _LocalEventsPageState extends State<LocalEventsPage> {
           onEventEdited: (editedEvent) async {
             await _repository.updateLocalEventTable(editedEvent);
             _fetchLocalEvents();
-          },
+          }, isPrivateEvent: true,
         ),
       ),
     );
