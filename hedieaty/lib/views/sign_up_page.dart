@@ -57,8 +57,11 @@ class SignUpPage extends StatelessWidget {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sign up failed. Check your fields\n'
-            'Make sure you are connected to the network.')),
+        SnackBar(
+          content: Text(
+            'Sign up failed. Check your fields\nMake sure you are connected to the network.\n${e.toString().replaceAll('Exception: ', '').replaceAll('[firebase_auth/email-already-in-use]', '')}',
+          ),
+        ),
       );
     }
   }

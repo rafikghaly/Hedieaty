@@ -32,7 +32,11 @@ class Repository {
   // User methods
   Future<void> registerUser(String email, String password, String name, String preferences, String phoneNumber) async {
     if (await _isOnline()) {
-      await _userController.registerUser(email, password, name, preferences, phoneNumber);
+      try {
+        await _userController.registerUser(email, password, name, preferences, phoneNumber);
+      } catch (e) {
+        throw Exception(e);
+      }
     } else {
       throw Exception("Cannot register user while offline.");
     }

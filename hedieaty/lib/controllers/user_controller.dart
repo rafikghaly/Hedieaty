@@ -220,6 +220,10 @@ class UserController {
     final hashedPassword = _hashPassword(password);
 
     try {
+      User? userExists = await getUserByPhoneNumber(phoneNumber);
+      if (userExists!= null){
+        throw Exception('The phone number you entered is already in use.\nPlease use a different phone number.');
+      }
       firebase_auth.UserCredential userCredential = await firebase_auth
           .FirebaseAuth.instance
           .createUserWithEmailAndPassword(
@@ -245,6 +249,7 @@ class UserController {
       // print("User registered successfully with Firebase UID: $firebaseUid");
     } catch (e) {
       // print("Failed to register user: $e");
+      throw Exception(e);
     }
   }
 

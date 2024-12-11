@@ -50,6 +50,29 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
         );
         return;
       }
+
+      User? existingUser =
+          await _repository.getUserByPhoneNumber(_phoneNumber ?? '');
+      if (existingUser != null && existingUser.id != widget.user.id) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Phone Number Exists'),
+              content: const Text(
+                  'The phone number you entered is already in use. Please use a different phone number.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+        return;
+      }
+
       final updatedUser = User(
         id: widget.user.id,
         firebaseUid: widget.user.firebaseUid,
