@@ -19,9 +19,14 @@ class ThemeNotifier extends ChangeNotifier {
       if (connectivityResult[0] == ConnectivityResult.none) {
         _isDarkMode = prefs.getBool('isDarkMode') ?? false;
       } else {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-        if (userDoc.exists && userDoc.data() != null) {
-          var data = userDoc.data() as Map<String, dynamic>;
+        var userSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('id', isEqualTo: int.parse(userId))
+            .get();
+        var user = userSnapshot.docs.map((doc) => doc.data()).toList();
+
+        if (user.isNotEmpty) {
+          var data = user.first;
           _isDarkMode = data['preferences']?.contains('darkMode=true') ?? false;
           await prefs.setBool('isDarkMode', _isDarkMode);
         } else {
@@ -29,6 +34,7 @@ class ThemeNotifier extends ChangeNotifier {
         }
       }
     } catch (e) {
+      print('Error loading user preferences: $e');
       _isDarkMode = prefs.getBool('isDarkMode') ?? false;
     }
 
@@ -49,13 +55,29 @@ class ThemeNotifier extends ChangeNotifier {
       try {
         var connectivityResult = await (Connectivity().checkConnectivity());
         if (connectivityResult[0] != ConnectivityResult.none) {
-          await FirebaseFirestore.instance.collection('users').doc(_userId).update({
-            'preferences': _isDarkMode ? 'darkMode=true' : 'darkMode=false',
-          });
+          var userSnapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .where('id', isEqualTo: int.parse(_userId!))
+              .get();
+          var user = userSnapshot.docs.map((doc) => doc.data()).toList();
+
+          if (user.isNotEmpty) {
+            var userDoc = userSnapshot.docs.first;
+            await userDoc.reference.update({
+              'preferences': _isDarkMode ? 'darkMode=true' : 'darkMode=false',
+            });
+            print('Theme preference saved to Firestore');
+          } else {
+            print('User document not found, saving theme preference to Firestore skipped');
+          }
+        } else {
+          print('No internet connection, saving theme preference to Firestore skipped');
         }
       } catch (e) {
         print('Failed to save preferences to Firestore: $e');
       }
+    } else {
+      print('User ID is null, cannot save preferences to Firestore');
     }
   }
 }
@@ -77,11 +99,9 @@ class _ThemeSwitchState extends State<ThemeSwitch> {
   void _loadInitialThemePreference() {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
     setState(() {
-      _isDarkMode = themeNotifier.isDarkMode;
+      themeNotifier.isDarkMode;
     });
   }
-  // Leave it Unused
-  bool _isDarkMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -89,9 +109,6 @@ class _ThemeSwitchState extends State<ThemeSwitch> {
     return Switch(
       value: themeNotifier.isDarkMode,
       onChanged: (value) {
-        setState(() {
-          _isDarkMode = value;
-        });
         themeNotifier.toggleTheme();
       },
     );

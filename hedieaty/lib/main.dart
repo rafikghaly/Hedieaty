@@ -44,14 +44,15 @@ void main() async {
   await Firebase.initializeApp();
   await DatabaseInitializer().database;
 
-  User? user = await loadUserFromPrefs();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  int? userId = prefs.getInt('userId');
 
   runApp(
     ChangeNotifierProvider(
       create: (_) {
         ThemeNotifier themeNotifier = ThemeNotifier();
-        if (user != null) {
-          themeNotifier.loadUserPreferences(user.firebaseUid.toString());
+        if (userId != null) {
+          themeNotifier.loadUserPreferences(userId.toString());
         }
         return themeNotifier;
       },
