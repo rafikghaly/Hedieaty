@@ -205,7 +205,7 @@ class UserService {
     await _updatePledgedGiftsWithNewUserName(user.id!, user.name);
   }
 
-  Future<void> updateUserFirestore(User user) async {
+  Future<bool> updateUserFirestore(User user) async {
     // print('Updating user with firebaseUid: ${user.firebaseUid}');
     int userIntID = int.parse(user.firebaseUid);
     // print(userIntID);
@@ -227,15 +227,14 @@ class UserService {
       // print('User updated successfully');
 
       // Update pledged gifts and friends
-      await updatePledgedGiftsForUser(user.name, userIntID);
-      await updateFriendsForUser(user.name, userIntID);
+      return true;
     } else {
+      return false;
       // print('No user found with firebaseUid: ${user.firebaseUid}');
     }
   }
 
-  Future<void> _updatePledgedGiftsWithNewUserName(
-      int userId, String newName) async {
+  Future<void> _updatePledgedGiftsWithNewUserName(int userId, String newName) async {
     // Find all events created by this user
     final db = await database;
     final List<Map<String, dynamic>> eventMaps = await db.query(
@@ -360,10 +359,7 @@ class UserService {
     return eventIds;
   }
 
-  Future<void> retrieveAndSaveProfileImage(String firebaseUid) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    int userIntID = int.parse(firebaseUid);
+  Future<String?> getProfileImageBase64(int userIntID) async {
     var querySnapshot = await FirebaseFirestore.instance
         .collection('users')
         .where('id', isEqualTo: userIntID)
@@ -372,28 +368,10 @@ class UserService {
     if (querySnapshot.docs.isNotEmpty) {
       var docSnapshot = querySnapshot.docs.first;
       var userData = docSnapshot.data();
-      String? profileImageBase64 = userData['profileImageBase64'];
-
-      if (profileImageBase64 != null) {
-        await prefs.setString('profileImageBase64', profileImageBase64);
-      }
-    } else {
-      //print('No user found with firebaseUid: $firebaseUid');
-    }
-  }
-
-  Future<String?> getUserProfileImage(int userId) async {
-    var querySnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('id', isEqualTo: userId)
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      var docSnapshot = querySnapshot.docs.first;
-      var userData = docSnapshot.data();
       return userData['profileImageBase64'];
+    } else {
+      return null; // No user found
     }
-    return null;
   }
 
   Future<User?> getUserByPhoneNumber(String phoneNumber) async {

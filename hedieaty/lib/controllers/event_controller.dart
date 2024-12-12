@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import '../models/event.dart';
+import 'gift_controller.dart';
 
 class EventController {
   static final EventController _instance = EventController._internal();
@@ -80,6 +81,8 @@ class EventController {
 
   Future<void> publishLocalEventTable(Event event) async {
     await _eventService.publishLocalEventTable(event);
+    await deleteLocalEventTable(event.id!);
+    await GiftController().deleteGiftsForEventLocalTABLE(event.id!);
   }
 
   Future<void> updateLocalEventTable(Event event) async {

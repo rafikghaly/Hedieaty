@@ -48,6 +48,7 @@ class NotificationService {
 
   NotificationService._internal();
 
+  /// Insert Operations ///
   Future<void> createNotification({
     required String userId,
     required String title,
@@ -70,6 +71,7 @@ class NotificationService {
         .set(notification.toMap());
   }
 
+  /// Update Operations ///
   Future<void> updateNotification(String notificationId) async {
     await FirebaseFirestore.instance
         .collection('notifications')
@@ -77,10 +79,19 @@ class NotificationService {
         .update({'isRead': true});
   }
 
+  /// Delete Operations ///
   Future<void> deleteNotification(String notificationId) async {
     await FirebaseFirestore.instance
         .collection('notifications')
         .doc(notificationId)
         .delete();
+  }
+
+  /// Read Operations ///
+  Stream<QuerySnapshot> getNotificationsStream(String userId) {
+    return FirebaseFirestore.instance
+        .collection('notifications')
+        .where('userId', isEqualTo: userId)
+        .snapshots();
   }
 }

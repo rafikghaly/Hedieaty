@@ -60,6 +60,7 @@ class Event {
   }
 }
 
+/// EventService ///
 class EventService {
   static final EventService _instance = EventService._internal();
   final Repository _repository = Repository();
@@ -71,7 +72,7 @@ class EventService {
   Future<Database> get database async {
     return await DatabaseInitializer().database;
   }
-
+  /// Insert Operations ///
   Future<void> insertEventFirestore(Event event) async {
     final docRef = FirebaseFirestore.instance.collection('events').doc();
     event.docId = docRef.id;
@@ -79,6 +80,7 @@ class EventService {
     await docRef.set(event.toMap());
   }
 
+  /// Read Operations ///
   Future<Event?> getEventByIdLocal(int id) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -179,6 +181,7 @@ class EventService {
     return events;
   }
 
+  /// Update Operations ///
   Future<void> updateEventLocal(Event event) async {
     final db = await database;
     await db.update(
@@ -215,8 +218,7 @@ class EventService {
   }
 
 // Method to update the dueDate in pledged gifts associated with the event
-  Future<void> _updateDueDateInPledgedGifts(int eventId,
-      String newDueDate) async {
+  Future<void> _updateDueDateInPledgedGifts(int eventId, String newDueDate) async {
     // print('Updating dueDate for pledged gifts with eventId: $eventId');
     var querySnapshot = await FirebaseFirestore.instance
         .collection('pledged_gifts')
@@ -235,8 +237,7 @@ class EventService {
   }
 
 
-  Future<void> _updatePledgedGiftsWithNewEventDate(int eventId,
-      String newDate) async {
+  Future<void> _updatePledgedGiftsWithNewEventDate(int eventId, String newDate) async {
     final db = await database;
     await db.rawUpdate(
       ''' UPDATE pledged_gifts SET dueDate = ? WHERE eventId = ? ''',
@@ -244,8 +245,7 @@ class EventService {
     );
   }
 
-  Future<void> updatePledgedGiftsWithEventOwner(int eventId,
-      String newName) async {
+  Future<void> updatePledgedGiftsWithEventOwner(int eventId, String newName) async {
     final db = await database;
     await db.rawUpdate(
       ''' UPDATE pledged_gifts SET friendName = ? WHERE eventId = ? ''',
@@ -253,6 +253,7 @@ class EventService {
     );
   }
 
+  /// Delete Operations ///
   Future<void> deleteEventLocal(int id) async {
     final db = await database;
     await db.delete(
@@ -293,8 +294,8 @@ class EventService {
     await eventDoc.delete();
   }
 
-  ///THIS IS ONLY FOR LOCAL_EVENTS TABLE
-// Insert local event into local_events table
+  /// THIS IS ONLY FOR LOCAL_EVENTS TABLE ///
+  // Insert local event into local_events table
   Future<int> insertLocalEventTable(Event event) async {
     final db = await database;
     final eventMap = event.toMap();
@@ -346,7 +347,6 @@ class EventService {
         event.id!);
     final docRef = FirebaseFirestore.instance.collection('events').doc();
     event.docId = docRef.id;
-    int originalEventId = event.id!;
     event.id = docRef.id.hashCode;
     await docRef.set(event.toMap());
 
@@ -366,8 +366,6 @@ class EventService {
       await GiftController().insertGiftFirestore(updatedGift);
     }
 
-    await deleteLocalEventTable(originalEventId);
-    await GiftController().deleteGiftsForEventLocalTABLE(originalEventId);
   }
 
   // Update local event in local_events table

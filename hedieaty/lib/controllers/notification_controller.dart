@@ -1,3 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+
 import '../models/notification.dart';
 
 class NotificationController {
@@ -20,6 +23,10 @@ class NotificationController {
 
   Future<void> updateNotification(String notificationId) async {
     await _notificationService.updateNotification(notificationId);
+  }
+
+  Stream<QuerySnapshot> getNotifications(String userId)  {
+    return _notificationService.getNotificationsStream(userId);
   }
 
   Future<void> deleteNotification(String notificationId) async {

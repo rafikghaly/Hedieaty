@@ -3,6 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 
 class UserController {
@@ -54,7 +55,12 @@ class UserController {
   }
 
   Future<void> updateUserFirestore(User user) async {
-    await _userService.updateUserFirestore(user);
+    var result = await _userService.updateUserFirestore(user);
+    int userIntID = int.parse(user.firebaseUid);
+    if (result) {
+      await updatePledgedGiftsForUser(user.name, userIntID);
+      await updateFriendsForUser(user.name, userIntID);
+    }
   }
 
   Future<void> deleteUserLocal(int id) async {
@@ -175,11 +181,19 @@ class UserController {
   }
 
   Future<void> retrieveAndSaveProfileImage(String firebaseUid) async {
-    await _userService.retrieveAndSaveProfileImage(firebaseUid);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int userIntID = int.parse(firebaseUid);
+    String? profileImageBase64 =
+        await _userService.getProfileImageBase64(userIntID);
+    if (profileImageBase64 != null) {
+      await prefs.setString('profileImageBase64', profileImageBase64);
+    } else {
+      //print('No user found with firebaseUid: $firebaseUid');
+    }
   }
 
   Future<String?> getUserProfileImage(int userId) async {
-    return await _userService.getUserProfileImage(userId);
+    return await _userService.getProfileImageBase64(userId);
   }
 
   Future<User?> getUserByPhoneNumber(String phoneNumber) async {

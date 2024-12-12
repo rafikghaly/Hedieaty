@@ -92,6 +92,7 @@ class GiftService {
     return await DatabaseInitializer().database;
   }
 
+  /// Insert Operations ///
   Future<void> insertGiftFirestore(Gift gift) async {
     final docRef = FirebaseFirestore.instance.collection('gifts').doc();
     gift.docId = docRef.id;
@@ -99,6 +100,7 @@ class GiftService {
     await docRef.set(gift.toMap());
   }
 
+  /// Read Operations ///
   Future<List<Gift>> giftsLocal(int eventId) async {
     final db = await database;
     final List<Map<String, dynamic>> giftMaps = await db.query(
@@ -160,6 +162,7 @@ class GiftService {
     }
   }
 
+  /// Update Operations ///
   Future<void> updateGiftLocal(Gift gift) async {
     final db = await database;
     await db.update(
@@ -175,19 +178,6 @@ class GiftService {
         .collection('gifts')
         .doc(gift.docId)
         .update(gift.toMap());
-  }
-
-  Future<void> deleteGiftLocal(int id) async {
-    final db = await database;
-    await db.delete(
-      'gifts',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<void> deleteGiftFirestore(String docId) async {
-    await FirebaseFirestore.instance.collection('gifts').doc(docId).delete();
   }
 
   Future<void> markGiftAsPurchased(String? giftId) async {
@@ -220,6 +210,20 @@ class GiftService {
         // print('Error marking gift as purchased in Firestore: $e');
       }
     }
+  }
+
+  /// Delete Operations ///
+  Future<void> deleteGiftLocal(int id) async {
+    final db = await database;
+    await db.delete(
+      'gifts',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteGiftFirestore(String docId) async {
+    await FirebaseFirestore.instance.collection('gifts').doc(docId).delete();
   }
 
   ///THIS IS ONLY FOR LOCAL_GIFTS TABLE

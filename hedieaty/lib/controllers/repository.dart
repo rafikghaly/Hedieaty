@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
@@ -381,5 +382,9 @@ class Repository {
 
   Future<void> deleteNotification(String notificationId ) async {
     await _notificationController.deleteNotification(notificationId);
+  }
+
+  Stream<QuerySnapshot> showNotifications(String userId)  {
+    return _notificationController.getNotifications(userId);
   }
 }

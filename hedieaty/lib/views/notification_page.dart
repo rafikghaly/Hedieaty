@@ -29,10 +29,7 @@ class NotificationPage extends StatelessWidget {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('notifications')
-            .where('userId', isEqualTo: userId.toString())
-            .snapshots(),
+        stream: _repository.showNotifications(userId.toString()),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
