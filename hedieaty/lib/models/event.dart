@@ -1,4 +1,5 @@
-import 'package:hedieaty/controllers/repository.dart';
+import 'package:hedieaty/controllers/event_controller.dart';
+
 import '../controllers/gift_controller.dart';
 import 'gift.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -63,7 +64,6 @@ class Event {
 /// EventService ///
 class EventService {
   static final EventService _instance = EventService._internal();
-  final Repository _repository = Repository();
 
   factory EventService() => _instance;
 
@@ -72,6 +72,7 @@ class EventService {
   Future<Database> get database async {
     return await DatabaseInitializer().database;
   }
+
   /// Insert Operations ///
   Future<void> insertEventFirestore(Event event) async {
     final docRef = FirebaseFirestore.instance.collection('events').doc();
@@ -108,7 +109,8 @@ class EventService {
   }
 
   Future<Event?> getEventByIdFirestore(int id) async {
-    var querySnapshot = await FirebaseFirestore.instance.collection('events')
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('events')
         .where('id', isEqualTo: id)
         .get();
     if (querySnapshot.docs.isNotEmpty) {
@@ -160,10 +162,9 @@ class EventService {
     var querySnapshot = await FirebaseFirestore.instance.collection('events')
         .where('userId', isEqualTo: userId)
         .get();
-    List<Event> events = [];
-    for (var doc in querySnapshot.docs) {
+    List<Event> events = querySnapshot.docs.map((doc) {
       var data = doc.data();
-      var event = Event(
+      return Event(
         id: data['id'],
         docId: doc.id,
         name: data['name'],
@@ -175,9 +176,7 @@ class EventService {
         userId: data['userId'],
         gifts: [], // Retrieve gifts separately based on eventId
       );
-      await _repository.updateEventStatus(event);
-      events.add(event);
-    }
+    }).toList();
     return events;
   }
 
@@ -236,8 +235,8 @@ class EventService {
     }
   }
 
-
-  Future<void> _updatePledgedGiftsWithNewEventDate(int eventId, String newDate) async {
+  Future<void> _updatePledgedGiftsWithNewEventDate(
+      int eventId, String newDate) async {
     final db = await database;
     await db.rawUpdate(
       ''' UPDATE pledged_gifts SET dueDate = ? WHERE eventId = ? ''',
@@ -245,7 +244,8 @@ class EventService {
     );
   }
 
-  Future<void> updatePledgedGiftsWithEventOwner(int eventId, String newName) async {
+  Future<void> updatePledgedGiftsWithEventOwner(
+      int eventId, String newName) async {
     final db = await database;
     await db.rawUpdate(
       ''' UPDATE pledged_gifts SET friendName = ? WHERE eventId = ? ''',
@@ -277,16 +277,21 @@ class EventService {
     var eventDoc = FirebaseFirestore.instance.collection('events').doc(id);
 
     // Delete related gifts and pledged gifts
-    var giftsQuery = await FirebaseFirestore.instance.collection('gifts').where(
-        'eventId', isEqualTo: id.hashCode).get();
+    var giftsQuery = await FirebaseFirestore.instance
+        .collection('gifts')
+        .where('eventId', isEqualTo: id.hashCode)
+        .get();
     for (var doc in giftsQuery.docs) {
       await FirebaseFirestore.instance.collection('gifts').doc(doc.id).delete();
     }
 
-    var pledgedGiftsQuery = await FirebaseFirestore.instance.collection(
-        'pledged_gifts').where('eventId', isEqualTo: id.hashCode).get();
+    var pledgedGiftsQuery = await FirebaseFirestore.instance
+        .collection('pledged_gifts')
+        .where('eventId', isEqualTo: id.hashCode)
+        .get();
     for (var doc in pledgedGiftsQuery.docs) {
-      await FirebaseFirestore.instance.collection('pledged_gifts')
+      await FirebaseFirestore.instance
+          .collection('pledged_gifts')
           .doc(doc.id)
           .delete();
     }
@@ -343,8 +348,8 @@ class EventService {
 
   // Publish local event to Firestore and delete from local_events table
   Future<void> publishLocalEventTable(Event event) async {
-    List<Gift> localGifts = await GiftController().getGiftsLocalTABLE(
-        event.id!);
+    List<Gift> localGifts =
+        await GiftController().getGiftsLocalTABLE(event.id!);
     final docRef = FirebaseFirestore.instance.collection('events').doc();
     event.docId = docRef.id;
     event.id = docRef.id.hashCode;
@@ -365,7 +370,6 @@ class EventService {
       );
       await GiftController().insertGiftFirestore(updatedGift);
     }
-
   }
 
   // Update local event in local_events table

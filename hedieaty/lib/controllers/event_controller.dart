@@ -25,7 +25,11 @@ class EventController {
   }
 
   Future<List<Event>> eventsFirestore({required int userId}) async {
-    return await _eventService.eventsFirestore(userId);
+    var events = await _eventService.eventsFirestore(userId);
+    for (var event in events) {
+      await updateEventStatus(event);
+    }
+    return events;
   }
 
   Future<void> updateEventStatus(Event event) async {
