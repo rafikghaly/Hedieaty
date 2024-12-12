@@ -15,16 +15,20 @@ import 'models/user.dart';
 import 'init_database.dart';
 import 'controllers/repository.dart';
 import 'controllers/sync_controller.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     final SyncController syncController = SyncController();
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final Repository repository = Repository();
+
+    // Check network connectivity
+    var connectivityResult = await (Connectivity().checkConnectivity());
+
     int? userId = prefs.getInt('userId');
 
     // Ensure to pass the userId and check network connection
-    if (userId != null && await repository.isOnline()) {
+    if (userId != null && connectivityResult[0] != ConnectivityResult.none) {
       await Firebase.initializeApp();
       await syncController.syncUserData(userId);
       print('User data synchronized successfully.');
@@ -41,6 +45,10 @@ void main() async {
   await Firebase.initializeApp();
   await DatabaseInitializer().database;
 
+  Workmanager().initialize(
+      callbackDispatcher, // Make it top-level function for Exception
+      isInDebugMode: true,
+  );
 
   runApp(
     ChangeNotifierProvider(
@@ -108,7 +116,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       Workmanager().registerPeriodicTask(
         '1',
         'simplePeriodicTask',
-        frequency: const Duration(hours: 1), // Sync every 10 minutes
+        frequency: const Duration(minutes: 10), // Sync every 10 minutes
         inputData: {'userId': userId},
       );
     }

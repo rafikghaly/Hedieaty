@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:crypto/crypto.dart';
@@ -7,11 +8,10 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../models/user.dart';
 import '../init_database.dart';
 import 'event_controller.dart';
-import 'repository.dart';
 
 class UserController {
   static final UserController _instance = UserController._internal();
-  final Repository _repository = Repository();
+
   factory UserController() => _instance;
 
   UserController._internal();
@@ -253,9 +253,14 @@ class UserController {
     }
   }
 
+  Future<bool> _isOnline() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    return connectivityResult[0] != ConnectivityResult.none;
+  }
+
   Future<User?> authenticateUser(String email, String password) async {
     // Check network connectivity
-    if (await _repository.isOnline()) {
+    if (await _isOnline()) {
       try {
         var querySnapshot = await FirebaseFirestore.instance
             .collection('users')
@@ -301,10 +306,17 @@ class UserController {
 
   Future<List<User>> usersLocal() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('users');
-    return List.generate(maps.length, (i) {
-      return User.fromMap(maps[i]);
+    final List<Map<String, dynamic>> userMaps = await db.query('users');
+    List<User> users = List.generate(userMaps.length, (i) {
+      return User.fromMap(userMaps[i]);
     });
+    final List<Map<String, dynamic>> friendMaps = await db.query('friend_local');
+    List<User> friends = List.generate(friendMaps.length, (i) {
+      return User(id: friendMaps[i]['friendUserId'], name: friendMaps[i]['name'], firebaseUid: '', email: '', preferences: '', password: '');
+    });
+
+    users.addAll(friends);
+    return users;
   }
 
   Future<List<User>> usersFirestore() async {
