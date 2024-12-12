@@ -25,39 +25,8 @@ class EventController {
   }
 
   Future<List<Event>> eventsFirestore({required int userId}) async {
-    var events = await _eventService.eventsFirestore(userId);
-    for (var event in events) {
-      await updateEventStatus(event);
-    }
-    return events;
+    return await _eventService.eventsFirestore(userId);
   }
-
-  Future<void> updateEventStatus(Event event) async {
-    try {
-      final now = DateTime.now();
-      final dateFormat = DateFormat('yyyy-MM-dd h:mm a');
-      final eventDateTime = dateFormat.parse(event.date);
-      final isSameDay = now.year == eventDateTime.year &&
-          now.month == eventDateTime.month &&
-          now.day == eventDateTime.day;
-
-      String newStatus;
-      if (eventDateTime.isBefore(now) && !isSameDay) {
-        newStatus = 'Past';
-      } else if (isSameDay) {
-        newStatus = 'Current';
-      } else {
-        newStatus = 'Upcoming';
-      }
-
-      if (event.status != newStatus) {
-        await _eventService.updateEventFirestore(event);
-      }
-    } catch (e) {
-      //print('Error updating event status: $e');
-    }
-  }
-
 
   Future<void> updateEventFirestore(Event event) async {
     await _eventService.updateEventFirestore(event);
@@ -85,8 +54,6 @@ class EventController {
 
   Future<void> publishLocalEventTable(Event event) async {
     await _eventService.publishLocalEventTable(event);
-    await deleteLocalEventTable(event.id!);
-    await GiftController().deleteGiftsForEventLocalTABLE(event.id!);
   }
 
   Future<void> updateLocalEventTable(Event event) async {

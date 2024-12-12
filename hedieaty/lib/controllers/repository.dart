@@ -141,11 +141,6 @@ class Repository {
     }
   }
 
-  Future<void> updateEventStatus(Event event) async {
-    await _eventController.updateEventStatus(event);
-  }
-  //TODO CHECK FOR DOUBLE DEPENDENCY
-
   Future<void> deleteEvent(String id) async {
     if (await isOnline()) {
       await _eventController.deleteEventFirestore(id);

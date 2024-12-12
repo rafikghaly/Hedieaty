@@ -1,4 +1,5 @@
 import 'package:hedieaty/controllers/event_controller.dart';
+import 'package:intl/intl.dart';
 
 import '../controllers/gift_controller.dart';
 import 'gift.dart';
@@ -159,12 +160,11 @@ class EventService {
   }
 
   Future<List<Event>> eventsFirestore(int userId) async {
-    var querySnapshot = await FirebaseFirestore.instance.collection('events')
-        .where('userId', isEqualTo: userId)
-        .get();
-    List<Event> events = querySnapshot.docs.map((doc) {
+    var querySnapshot = await FirebaseFirestore.instance.collection('events').where('userId', isEqualTo: userId).get();
+    List<Event> events = [];
+    for (var doc in querySnapshot.docs) {
       var data = doc.data();
-      return Event(
+      var event = Event(
         id: data['id'],
         docId: doc.id,
         name: data['name'],
@@ -176,11 +176,38 @@ class EventService {
         userId: data['userId'],
         gifts: [], // Retrieve gifts separately based on eventId
       );
-    }).toList();
+      await _updateEventStatus(event);
+      events.add(event);
+    }
     return events;
   }
-
   /// Update Operations ///
+  Future<void> _updateEventStatus(Event event) async {
+    try {
+      final now = DateTime.now();
+      final dateFormat = DateFormat('yyyy-MM-dd h:mm a');
+      final eventDateTime = dateFormat.parse(event.date);
+      final isSameDay = now.year == eventDateTime.year &&
+          now.month == eventDateTime.month &&
+          now.day == eventDateTime.day;
+
+      String newStatus;
+      if (eventDateTime.isBefore(now) && !isSameDay) {
+        newStatus = 'Past';
+      } else if (isSameDay) {
+        newStatus = 'Current';
+      } else {
+        newStatus = 'Upcoming';
+      }
+
+      if (event.status != newStatus) {
+        await updateEventFirestore(event);
+      }
+    } catch (e) {
+      //print('Error updating event status: $e');
+    }
+  }
+
   Future<void> updateEventLocal(Event event) async {
     final db = await database;
     await db.update(
@@ -348,12 +375,11 @@ class EventService {
 
   // Publish local event to Firestore and delete from local_events table
   Future<void> publishLocalEventTable(Event event) async {
-    List<Gift> localGifts =
-        await GiftController().getGiftsLocalTABLE(event.id!);
+    List<Gift> localGifts = await GiftController().getGiftsLocalTABLE(event.id!);
     final docRef = FirebaseFirestore.instance.collection('events').doc();
     event.docId = docRef.id;
-    event.id = docRef.id.hashCode;
-    await docRef.set(event.toMap());
+    int originalEventId = event.id!;
+    event.id = docRef.id.hashCode; await docRef.set(event.toMap());
 
     for (Gift localGift in localGifts) {
       Gift updatedGift = Gift(
@@ -370,8 +396,9 @@ class EventService {
       );
       await GiftController().insertGiftFirestore(updatedGift);
     }
+    await deleteLocalEventTable(originalEventId);
+    await GiftController().deleteGiftsForEventLocalTABLE(originalEventId);
   }
-
   // Update local event in local_events table
   Future<void> updateLocalEventTable(Event event) async {
     final db = await database;

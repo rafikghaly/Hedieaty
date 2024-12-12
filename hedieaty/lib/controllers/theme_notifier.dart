@@ -33,7 +33,7 @@ class ThemeNotifier extends ChangeNotifier {
         }
       }
     } catch (e) {
-      //print('Error loading user preferences: $e');
+      print('Error loading user preferences: $e');
       _isDarkMode = prefs.getBool('isDarkMode') ?? false;
     }
 
@@ -52,7 +52,7 @@ class ThemeNotifier extends ChangeNotifier {
 
     if (_userId != null) {
       try {
-        if (!await _repository.isOnline()) {
+        if (await _repository.isOnline()) {
           var userSnapshot = await FirebaseFirestore.instance
               .collection('users')
               .where('id', isEqualTo: int.parse(_userId!))
@@ -64,18 +64,18 @@ class ThemeNotifier extends ChangeNotifier {
             await userDoc.reference.update({
               'preferences': _isDarkMode ? 'darkMode=true' : 'darkMode=false',
             });
-            //print('Theme preference saved to Firestore');
+            print('Theme preference saved to Firestore');
           } else {
-            //print('User document not found, saving theme preference to Firestore skipped');
+            print('User document not found, saving theme preference to Firestore skipped');
           }
         } else {
-          //print('No internet connection, saving theme preference to Firestore skipped');
+          print('No internet connection, saving theme preference to Firestore skipped');
         }
       } catch (e) {
-        //print('Failed to save preferences to Firestore: $e');
+        print('Failed to save preferences to Firestore: $e');
       }
     } else {
-      //print('User ID is null, cannot save preferences to Firestore');
+      print('User ID is null, cannot save preferences to Firestore');
     }
   }
 }

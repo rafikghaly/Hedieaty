@@ -226,7 +226,7 @@ class GiftService {
     await FirebaseFirestore.instance.collection('gifts').doc(docId).delete();
   }
 
-  ///THIS IS ONLY FOR LOCAL_GIFTS TABLE
+  /// THIS IS ONLY FOR LOCAL_GIFTS TABLE ///
   Future<int> insertGiftLocalTABLE(Gift gift) async {
     final db = await database;
     final giftMap = gift.toMap();

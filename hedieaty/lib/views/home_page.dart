@@ -196,7 +196,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _logout(BuildContext context) async {
     //TODO SYNC WHEN MAKING LOCAL EVENT
-    if (! await _repository.isOnline()) {
+    if (await _repository.isOnline()) {
       SyncController syncController = SyncController();
       await syncController.syncUserData(widget.firebaseId);
       // print('User data synchronized successfully.');
