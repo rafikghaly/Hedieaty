@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // Alias Firebase User
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:hedieaty/controllers/repository.dart';
 import 'sign_in_page.dart';
 
@@ -26,8 +25,7 @@ class SignUpPage extends StatelessWidget {
     const preferences = 'darkMode=false';
     final phoneNumber = phoneNumberController.text;
 
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult[0] == ConnectivityResult.none) {
+    if (! await _repository.isOnline()) {
       // Device is offline
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network connection required to sign up.')),

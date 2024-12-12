@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../controllers/sync_controller.dart';
@@ -197,8 +196,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _logout(BuildContext context) async {
     //TODO SYNC WHEN MAKING LOCAL EVENT
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult[0] != ConnectivityResult.none) {
+    if (! await _repository.isOnline()) {
       SyncController syncController = SyncController();
       await syncController.syncUserData(widget.firebaseId);
       // print('User data synchronized successfully.');

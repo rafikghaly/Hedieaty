@@ -99,7 +99,6 @@ class Repository {
     } else{
       throw Exception("Cannot get user while offline.");
     }
-    return null;
   }
 
   // Event methods

@@ -7,7 +7,7 @@ class NotificationPage extends StatelessWidget {
   final int userId;
   final Repository _repository = Repository();
 
-  NotificationPage({required this.userId});
+  NotificationPage({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {

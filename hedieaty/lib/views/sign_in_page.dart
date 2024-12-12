@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:connectivity_plus/connectivity_plus.dart'; // For checking internet connectivity
 import 'package:hedieaty/controllers/repository.dart';
 import '../controllers/theme_notifier.dart';
 import '../models/user.dart';
@@ -23,7 +22,7 @@ class SignInPage extends StatelessWidget {
   Future<void> onUserSignIn(int userId) async {
     SyncController syncController = SyncController();
     await syncController.syncUserData(userId);
-    print('User data synchronized successfully.');
+    //print('User data synchronized successfully.');
   }
 
 
@@ -45,8 +44,7 @@ class SignInPage extends StatelessWidget {
     final password = passwordController.text;
 
     // Check network connectivity
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult[0] == ConnectivityResult.none) {
+    if (! await _repository.isOnline()) {
       // Device is offline, use local authentication
       User? user = await _repository.authenticateUser(email, password);
       if (user != null) {

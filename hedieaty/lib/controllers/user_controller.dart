@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:crypto/crypto.dart';
@@ -8,10 +7,11 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../models/user.dart';
 import '../init_database.dart';
 import 'event_controller.dart';
+import 'repository.dart';
 
 class UserController {
   static final UserController _instance = UserController._internal();
-
+  final Repository _repository = Repository();
   factory UserController() => _instance;
 
   UserController._internal();
@@ -253,14 +253,9 @@ class UserController {
     }
   }
 
-  Future<bool> _isOnline() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    return connectivityResult[0] != ConnectivityResult.none;
-  }
-
   Future<User?> authenticateUser(String email, String password) async {
     // Check network connectivity
-    if (await _isOnline()) {
+    if (await _repository.isOnline()) {
       try {
         var querySnapshot = await FirebaseFirestore.instance
             .collection('users')

@@ -2,21 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'repository.dart';
 
 class ThemeNotifier extends ChangeNotifier {
   bool _isDarkMode = false;
   String? _userId;
 
   bool get isDarkMode => _isDarkMode;
-
+  final Repository _repository = Repository();
   Future<void> loadUserPreferences(String userId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _userId = userId;
 
     try {
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult[0] == ConnectivityResult.none) {
+      if (!await _repository.isOnline()) {
         _isDarkMode = prefs.getBool('isDarkMode') ?? false;
       } else {
         var userSnapshot = await FirebaseFirestore.instance
@@ -53,8 +52,7 @@ class ThemeNotifier extends ChangeNotifier {
 
     if (_userId != null) {
       try {
-        var connectivityResult = await (Connectivity().checkConnectivity());
-        if (connectivityResult[0] != ConnectivityResult.none) {
+        if (!await _repository.isOnline()) {
           var userSnapshot = await FirebaseFirestore.instance
               .collection('users')
               .where('id', isEqualTo: int.parse(_userId!))

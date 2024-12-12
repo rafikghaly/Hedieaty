@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
@@ -106,8 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _pickAndSaveImage() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult[0] == ConnectivityResult.none) {
+    if (! await _repository.isOnline()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cannot proceed while offline. Please check your network connection.')),
       );
