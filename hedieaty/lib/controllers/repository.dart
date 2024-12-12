@@ -30,6 +30,7 @@ class Repository {
   Future<void> registerUser(String email, String password, String name, String preferences, String phoneNumber) async {
     if (await isOnline()) {
       try {
+        email = email.toLowerCase(); // To avoid any conflicts with fireauth
         await _userController.registerUser(email, password, name, preferences, phoneNumber);
       } catch (e) {
         throw Exception(e);

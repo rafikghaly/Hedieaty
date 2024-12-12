@@ -105,6 +105,7 @@ class _LocalGiftListPageState extends State<LocalGiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(widget.eventName, style: const TextStyle(color: Colors.white)),
         backgroundColor: Colors.amber[700],
         elevation: 10.0,

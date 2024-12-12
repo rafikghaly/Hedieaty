@@ -129,10 +129,9 @@ class _AddGiftPageState extends State<AddGiftPage> {
           });
         }
       }
-    }else {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
-            'Permissions denied. Gallery.')),
+        const SnackBar(content: Text('Permissions denied. Gallery access is required to upload images.')),
       );
     }
   }
@@ -165,7 +164,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Add a New Gift !',
+                  'Add a New Gift!',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber[800]),
                 ),
                 const SizedBox(height: 20),
@@ -239,6 +238,11 @@ class _AddGiftPageState extends State<AddGiftPage> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a price';
+                    }
+                    try {
+                      double.parse(value);
+                    } catch (e) {
+                      return 'Please enter a valid number';
                     }
                     return null;
                   },

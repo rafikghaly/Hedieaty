@@ -147,7 +147,7 @@ class _ProfilePageState extends State<ProfilePage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(
-            'Permissions denied. Cannot access Gallery.')),
+            'Permissions denied. Gallery access is required to upload images.')),
       );
     }
   }

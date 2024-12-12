@@ -60,7 +60,7 @@ class _EditUserInfoPageState extends State<EditUserInfoPage> {
 
       User? existingUser =
           await _repository.getUserByPhoneNumber(_phoneNumber ?? '');
-      if (existingUser != null && existingUser.id != widget.user.id) {
+      if (existingUser != null && existingUser.id != widget.user.id && _phoneNumber != widget.user.phoneNumber) {
         showDialog(
           context: context,
           builder: (context) {

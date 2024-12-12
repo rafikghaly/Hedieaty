@@ -130,11 +130,9 @@ class _EditGiftPageState extends State<EditGiftPage> {
           _isLoading = false;
         });
       }
-    }
-    else {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
-            'Permissions denied. Cannot access Gallery.')),
+        const SnackBar(content: Text('Permissions denied. Gallery access is required to upload images.')),
       );
     }
   }
@@ -251,6 +249,11 @@ class _EditGiftPageState extends State<EditGiftPage> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a price';
+                    }
+                    try {
+                      double.parse(value);
+                    } catch (e) {
+                      return 'Please enter a valid number';
                     }
                     return null;
                   },
