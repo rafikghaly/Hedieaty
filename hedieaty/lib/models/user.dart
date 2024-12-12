@@ -206,7 +206,9 @@ class UserService {
   }
 
   Future<void> updateUserFirestore(User user) async {
+    // print('Updating user with firebaseUid: ${user.firebaseUid}');
     int userIntID = int.parse(user.firebaseUid);
+    // print(userIntID);
     var querySnapshot = await FirebaseFirestore.instance
         .collection('users')
         .where('id', isEqualTo: userIntID)
@@ -214,6 +216,7 @@ class UserService {
 
     if (querySnapshot.docs.isNotEmpty) {
       var docSnapshot = querySnapshot.docs.first;
+      // print('User document found: ${docSnapshot.id}');
       await FirebaseFirestore.instance
           .collection('users')
           .doc(docSnapshot.id)
@@ -221,14 +224,19 @@ class UserService {
         'name': user.name,
         'phoneNumber': user.phoneNumber,
       });
+      // print('User updated successfully');
 
+      // Update pledged gifts and friends
       await updatePledgedGiftsForUser(user.name, userIntID);
       await updateFriendsForUser(user.name, userIntID);
+    } else {
+      // print('No user found with firebaseUid: ${user.firebaseUid}');
     }
   }
 
   Future<void> _updatePledgedGiftsWithNewUserName(
       int userId, String newName) async {
+    // Find all events created by this user
     final db = await database;
     final List<Map<String, dynamic>> eventMaps = await db.query(
       'events',
@@ -297,48 +305,59 @@ class UserService {
   }
 
   Future<void> updateFriendsForUser(String newName, int userId) async {
+    // print('Updating friends for userId2: $userId with new name: $newName');
     var querySnapshot = await FirebaseFirestore.instance
         .collection('friends')
         .where('userId2', isEqualTo: userId)
         .get();
 
     for (var doc in querySnapshot.docs) {
+      // print('Friend document found: ${doc.id}');
       await FirebaseFirestore.instance
           .collection('friends')
           .doc(doc.id)
           .update({
         'name': newName,
       });
+      // print('Friend updated successfully');
     }
   }
 
   Future<void> updatePledgedGiftsForUser(String newName, int userId) async {
+    // Fetch event IDs for the user
     List<int> eventIds = await getEventIdsForUser(userId);
 
     for (int eventId in eventIds) {
+      // print('Updating pledged gifts for eventId: $eventId');
       var querySnapshot = await FirebaseFirestore.instance
           .collection('pledged_gifts')
           .where('eventId', isEqualTo: eventId)
           .get();
 
       for (var doc in querySnapshot.docs) {
+        // print('Pledged gift document found: ${doc.id}');
         await FirebaseFirestore.instance
             .collection('pledged_gifts')
             .doc(doc.id)
             .update({
           'friendName': newName,
         });
+        // print('Pledged gift updated successfully');
       }
     }
   }
 
   Future<List<int>> getEventIdsForUser(int userId) async {
+    // print('Fetching event IDs for userId: $userId');
     var querySnapshot = await FirebaseFirestore.instance
         .collection('events')
         .where('userId', isEqualTo: userId)
         .get();
 
-    return querySnapshot.docs.map((doc) => doc['id'] as int).toList();
+    List<int> eventIds =
+        querySnapshot.docs.map((doc) => doc['id'] as int).toList();
+    // print('Event IDs for userId: $eventIds');
+    return eventIds;
   }
 
   Future<void> retrieveAndSaveProfileImage(String firebaseUid) async {
@@ -358,6 +377,8 @@ class UserService {
       if (profileImageBase64 != null) {
         await prefs.setString('profileImageBase64', profileImageBase64);
       }
+    } else {
+      //print('No user found with firebaseUid: $firebaseUid');
     }
   }
 
@@ -386,7 +407,7 @@ class UserService {
         return User.fromMap(doc.data());
       }
     } catch (e) {
-      // Handle any Firestore errors
+      //print('Error getting user by phone number: $e');
     }
     return null;
   }
@@ -411,8 +432,7 @@ class UserService {
         }
       }
     } catch (e) {
-      // Handle any Firestore errors
-      print('Error getting user by eventId: $e');
+      //print('Error getting user by eventId: $e');
     }
     return null;
   }

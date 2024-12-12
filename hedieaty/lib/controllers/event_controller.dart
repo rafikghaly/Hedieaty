@@ -24,11 +24,7 @@ class EventController {
   }
 
   Future<List<Event>> eventsFirestore({required int userId}) async {
-    var events = await _eventService.eventsFirestore(userId);
-    for (var event in events) {
-      await updateEventStatus(event);
-    }
-    return events;
+    return await _eventService.eventsFirestore(userId);
   }
 
   Future<void> updateEventStatus(Event event) async {
@@ -57,26 +53,13 @@ class EventController {
     }
   }
 
-  Future<void> updateEventLocal(Event event) async {
-    await _eventService.updateEventLocal(event);
-    await _updatePledgedGiftsWithNewEventDate(event.id!, event.date);
-  }
 
   Future<void> updateEventFirestore(Event event) async {
     await _eventService.updateEventFirestore(event);
-    await _updatePledgedGiftsWithNewEventDate(event.id!, event.date);
-  }
-
-  Future<void> _updatePledgedGiftsWithNewEventDate(int eventId, String newDate) async {
-    await _eventService.updatePledgedGiftsWithNewEventDate(eventId, newDate);
   }
 
   Future<void> updatePledgedGiftsWithEventOwner(int eventId, String newName) async {
     await _eventService.updatePledgedGiftsWithEventOwner(eventId, newName);
-  }
-
-  Future<void> deleteEventLocal(int id) async {
-    await _eventService.deleteEventLocal(id);
   }
 
   Future<void> deleteEventFirestore(String id) async {
@@ -103,7 +86,4 @@ class EventController {
     await _eventService.updateLocalEventTable(event);
   }
 
-  Future<void> updateDueDateInPledgedGifts(int eventId, String newDueDate) async {
-    await _eventService.updateDueDateInPledgedGifts(eventId, newDueDate);
-  }
 }

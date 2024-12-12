@@ -140,6 +140,11 @@ class Repository {
     }
   }
 
+  Future<void> updateEventStatus(Event event) async {
+    await _eventController.updateEventStatus(event);
+  }
+  //TODO CHECK FOR DOUBLE DEPENDENCY
+
   Future<void> deleteEvent(String id) async {
     if (await isOnline()) {
       await _eventController.deleteEventFirestore(id);
@@ -270,8 +275,8 @@ class Repository {
     return null;
   }
 
-  Future<Gift?> getGiftById_For_pledged_Firestore(int id) async {
-    return await _giftController.getGiftById_for_pledged_Firestore(id);
+  Future<Gift?> getGiftByIdForPledgedFirestore(int id) async {
+    return await _giftController.getGiftByIdForPledgedFirestore(id);
   }
 
   Future<void> updateGift(Gift gift) async {

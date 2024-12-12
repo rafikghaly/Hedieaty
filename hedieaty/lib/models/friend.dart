@@ -123,6 +123,7 @@ class FriendService {
       return;
     }
 
+    // String userProfileImage1 = await _getUserProfileImage(userId1);
     String userProfileImage2 = await _getUserProfileImage(userId2);
 
     Friend friend1 = Friend(
@@ -135,7 +136,18 @@ class FriendService {
       events: [],
     );
 
+    // Friend friend2 = Friend(
+    //   id: null,
+    //   userId1: userId2,
+    //   userId2: userId1,
+    //   name: userName1,
+    //   picture: userProfileImage1,
+    //   upcomingEvents: 0,
+    //   events: [],
+    // );
+
     await insertFriendLocal(friend1);
+    // await insertFriendLocal(friend2);
   }
 
   Future<void> addMutualFriendsFirestore(
@@ -144,6 +156,7 @@ class FriendService {
       return;
     }
 
+    // String userProfileImage1 = await _getUserProfileImage(userId1);
     String userProfileImage2 = await _getUserProfileImage(userId2);
 
     Friend friend1 = Friend(
@@ -156,7 +169,18 @@ class FriendService {
       events: [],
     );
 
+    // Friend friend2 = Friend(
+    //   id: null,
+    //   userId1: userId2,
+    //   userId2: userId1,
+    //   name: userName1,
+    //   picture: userProfileImage1,
+    //   upcomingEvents: 0,
+    //   events: [],
+    // );
+
     await insertFriendFirestore(friend1);
+    // await insertFriendFirestore(friend2);
   }
 
   Future<List<Friend>> friendsLocal(int userId) async {
@@ -196,6 +220,7 @@ class FriendService {
   }
 
   Future<List<Friend>> friendsFirestore(int userId) async {
+    // Query for both userId1 and userId2
     var querySnapshot = await FirebaseFirestore.instance
         .collection('friends')
         .where('userId1', isEqualTo: userId)
@@ -208,6 +233,7 @@ class FriendService {
 
     List<Friend> friends = [];
 
+    // Process the results where the userId is userId1
     for (var doc in querySnapshot.docs) {
       var data = doc.data();
       int friendUserId =
@@ -230,6 +256,7 @@ class FriendService {
       ));
     }
 
+    // Process the results where the userId is userId2
     for (var doc in querySnapshot2.docs) {
       var data = doc.data();
       int friendUserId =

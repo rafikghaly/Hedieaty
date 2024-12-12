@@ -41,7 +41,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
       _pledgedGiftsWithDetails = [];
       for (var pledgedGift in pledgedGifts) {
         final gift = await _repository
-            .getGiftById_For_pledged_Firestore(pledgedGift.giftId);
+            .getGiftByIdForPledgedFirestore(pledgedGift.giftId);
 
         if (gift != null && pledgedGift.userId == widget.userId) {
           _pledgedGiftsWithDetails.add({

@@ -27,8 +27,8 @@ class GiftController {
     return await _giftService.getGiftByIdFirestore(docId);
   }
 
-  Future<Gift?> getGiftById_for_pledged_Firestore(int id) async {
-    return await _giftService.getGiftById_for_pledged_Firestore(id);
+  Future<Gift?> getGiftByIdForPledgedFirestore(int id) async {
+    return await _giftService.getGiftByIdForPledgedFirestore(id);
   }
 
   Future<void> updateGiftLocal(Gift gift) async {

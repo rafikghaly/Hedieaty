@@ -145,7 +145,7 @@ class GiftService {
     }
   }
 
-  Future<Gift?> getGiftById_for_pledged_Firestore(int id) async {
+  Future<Gift?> getGiftByIdForPledgedFirestore(int id) async {
     var querySnapshot = await FirebaseFirestore.instance
         .collection('gifts')
         .where('id', isEqualTo: id)
@@ -153,7 +153,7 @@ class GiftService {
     if (querySnapshot.docs.isNotEmpty) {
       var docSnapshot = querySnapshot.docs.first;
       // print('Gift data retrieved: ${docSnapshot.data()}');
-      return Gift.fromMap(docSnapshot.data() as Map<String, dynamic>);
+      return Gift.fromMap(docSnapshot.data());
     } else {
       // print('No gift found for gift ID: $id');
       return null;
@@ -284,4 +284,6 @@ class GiftService {
       whereArgs: [giftId],
     );
   }
+
+///////////////////////////////////////////////////////////////////////////////
 }

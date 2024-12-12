@@ -70,9 +70,14 @@ class PledgedGiftService {
   }
 
   Future<void> insertPledgedGiftFirestore(PledgedGift pledgedGift) async {
+    // Create a reference to a new document with an auto-generated ID
     final docRef = FirebaseFirestore.instance.collection('pledged_gifts').doc();
+
+    // The unique Firestore document ID
     pledgedGift.docId = docRef.id;
     pledgedGift.id = docRef.id.hashCode;
+
+    // Set the pledged gift data with the newly assigned document ID
     await docRef.set(pledgedGift.toMap());
   }
 
@@ -146,7 +151,12 @@ class PledgedGiftService {
       var docSnapshot = await docRef.get();
       if (docSnapshot.exists) {
         await docRef.update(pledgedGift.toMap());
+        // print("Document successfully updated!");
+      } else {
+        // print("No document found with the provided docId.");
       }
+    } else {
+      // print("Invalid document ID.");
     }
   }
 
