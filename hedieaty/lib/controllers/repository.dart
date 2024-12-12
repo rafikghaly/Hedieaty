@@ -335,12 +335,12 @@ class Repository {
     //TODO await _pledgedGiftController.deletePledgedGiftLocal(id);//TODO Change the id delete into string
   }
 
-  Future<void> saveImageToSharedPrefs(String firebaseUid) async{
+  Future<void> saveImageToSharedPrefs(String firebaseUid, String? profileImageBase64) async{
     if (await isOnline()) {
       await _userController.retrieveAndSaveProfileImage(firebaseUid);
     } else{
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('profileImageBase64', "null");
+       SharedPreferences prefs = await SharedPreferences.getInstance();
+       await prefs.setString('profileImageBase64', profileImageBase64!);
     }
   }
 

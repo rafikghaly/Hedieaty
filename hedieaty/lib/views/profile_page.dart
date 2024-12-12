@@ -221,7 +221,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               if (_profileImageBase64.isEmpty) {
                                 _pickAndSaveImage();
                               } else {
-                                if(await _repository.isOnline()) {
                                   showDialog(
                                   context: context,
                                   builder: (context) => Dialog(
@@ -254,7 +253,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                 );
                                 }
-                              }
                             },
                             child: CircleAvatar(
                               radius: 70,
