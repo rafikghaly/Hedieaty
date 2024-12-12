@@ -26,7 +26,7 @@ class SignInPage extends StatelessWidget {
   }
 
 
-  Future<void> _saveUserLogin(int userId, String userName, String email,int firebaseId, String phoneNumber, String preferences, String profileImageBase64) async {
+  Future<void> _saveUserLogin(int userId, String userName, String email,int firebaseId, String phoneNumber, String preferences, String? profileImageBase64) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId);
     await prefs.setInt('firebaseId', firebaseId);
@@ -103,7 +103,7 @@ class SignInPage extends StatelessWidget {
      await prefs.clear();
     }
 
-    await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode, user.phoneNumber!, user.preferences, user.profileImageBase64!);
+    await _saveUserLogin(user.id!, user.name, user.email, user.firebaseUid.hashCode, user.phoneNumber!, user.preferences, user.profileImageBase64);
   }
 
   @override

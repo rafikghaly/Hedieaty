@@ -1,4 +1,3 @@
-import 'package:hedieaty/controllers/event_controller.dart';
 import 'package:intl/intl.dart';
 
 import '../controllers/gift_controller.dart';
@@ -201,7 +200,10 @@ class EventService {
       }
 
       if (event.status != newStatus) {
-        await updateEventFirestore(event);
+        await FirebaseFirestore.instance
+            .collection('events')
+            .doc(event.docId)
+            .update({'status': newStatus});
       }
     } catch (e) {
       //print('Error updating event status: $e');
