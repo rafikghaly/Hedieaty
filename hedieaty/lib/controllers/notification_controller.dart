@@ -1,39 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/Notification.dart';
+import '../models/notification.dart';
 
 class NotificationController {
-  void createNotification(
-      {required String userId,
-      required String title,
-      required String message}) {
-    String notificationId =
-        FirebaseFirestore.instance.collection('notifications').doc().id;
+  static final NotificationController _instance =
+  NotificationController._internal();
+  final NotificationService _notificationService = NotificationService();
 
-    var notification = Notification(
-      id: notificationId,
-      userId: userId,
-      title: title,
-      message: message,
-      timestamp: DateTime.now(),
-    );
+  factory NotificationController() => _instance;
 
-    FirebaseFirestore.instance
-        .collection('notifications')
-        .doc(notification.id)
-        .set(notification.toMap());
+  NotificationController._internal();
+
+  Future<void> createNotification({
+    required String userId,
+    required String title,
+    required String message,
+  }) async {
+    await _notificationService.createNotification(
+        userId: userId, title: title, message: message);
   }
 
-  Future<void> updateNotification(notificationId) async {
-    await FirebaseFirestore.instance
-        .collection('notifications')
-        .doc(notificationId)
-        .update({'isRead': true});
+  Future<void> updateNotification(String notificationId) async {
+    await _notificationService.updateNotification(notificationId);
   }
 
-  Future<void> deleteNotification(notificationId) async {
-    await FirebaseFirestore.instance
-        .collection('notifications')
-        .doc(notificationId)
-        .delete();
+  Future<void> deleteNotification(String notificationId) async {
+    await _notificationService.deleteNotification(notificationId);
   }
 }
