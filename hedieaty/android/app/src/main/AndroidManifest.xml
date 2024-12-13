@@ -5,7 +5,7 @@
     <!-- Permissions for devices running Android 13 (API level 33) or higher -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <application
-        android:label="hedieaty"
+        android:label="Hedieaty"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
