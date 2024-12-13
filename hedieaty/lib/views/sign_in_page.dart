@@ -89,7 +89,7 @@ class SignInPage extends StatelessWidget {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign in failed: $e')),
+          SnackBar(content: Text('Sign in failed: ${e.toString().replaceAll("[firebase_auth/invalid-credential]", '').replaceAll("[firebase_auth/invalid-email]", '')}')),
         );
       }
     }
@@ -129,6 +129,7 @@ class SignInPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
                 TextField(
+                  key: const Key('emailField'), // Key for testing
                   controller: emailController,
                   decoration: InputDecoration(
                     labelText: 'Email',
@@ -140,6 +141,7 @@ class SignInPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 TextField(
+                  key: const Key('passwordField'), // Key for testing
                   controller: passwordController,
                   decoration: InputDecoration(
                     labelText: 'Password',
@@ -152,6 +154,7 @@ class SignInPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
+                  key: const Key('signInButton'), // Key for testing
                   onPressed: () => _signIn(context),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
