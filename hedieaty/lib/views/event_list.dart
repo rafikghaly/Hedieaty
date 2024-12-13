@@ -218,8 +218,9 @@ class _EventListPageState extends State<EventListPage> {
                           IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () async {
-                              if(await _repository.isOnline())  _editEvent(event);
-                              else{
+                              if(await _repository.isOnline()) {
+                                _editEvent(event);
+                              } else{
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('Can\'t edit events while offline!')),
                                 );

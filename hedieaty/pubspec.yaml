@@ -47,6 +47,7 @@ dependencies:
   provider: ^6.1.2 #for state management for the darkTheme
   permission_handler: ^11.3.1
   device_info_plus: ^11.1.1
+  flutter_launcher_icons: ^0.14.2
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -109,3 +110,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"

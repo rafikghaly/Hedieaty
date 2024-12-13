@@ -1,6 +1,4 @@
-import 'package:intl/intl.dart';
 import '../models/event.dart';
-import 'gift_controller.dart';
 
 class EventController {
   static final EventController _instance = EventController._internal();
