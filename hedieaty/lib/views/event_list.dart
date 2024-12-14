@@ -266,6 +266,7 @@ class _EventListPageState extends State<EventListPage> {
                         horizontal: 50, vertical: 15),
                   ),
                   child: const Text(
+                    key: Key("AddNewEvent"), // For Testing
                     'Add New Event',
                     style: TextStyle(
                       fontSize: 16,

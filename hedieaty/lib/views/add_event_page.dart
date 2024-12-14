@@ -172,6 +172,7 @@ class _AddEventPageState extends State<AddEventPage> {
               ),
               const SizedBox(height: 20),
               TextField(
+                key: const Key("EventTitleField"), // For Testing
                 controller: nameController,
                 decoration: InputDecoration(
                   labelText: 'Event Name',
@@ -180,6 +181,7 @@ class _AddEventPageState extends State<AddEventPage> {
               ),
               const SizedBox(height: 10),
               TextField(
+                key: const Key("EventCategoryField"), // For Testing
                 controller: categoryController,
                 decoration: InputDecoration(
                   labelText: 'Category',
@@ -188,6 +190,7 @@ class _AddEventPageState extends State<AddEventPage> {
               ),
               const SizedBox(height: 10),
               TextField(
+                key: const Key("EventLocationField"), // For Testing
                 controller: locationController,
                 decoration: InputDecoration(
                   labelText: 'Location',
@@ -196,6 +199,7 @@ class _AddEventPageState extends State<AddEventPage> {
               ),
               const SizedBox(height: 10),
               TextField(
+                key: const Key("EventDescriptionField"), // For Testing
                 controller: descriptionController,
                 decoration: InputDecoration(
                   labelText: 'Description',
@@ -204,6 +208,7 @@ class _AddEventPageState extends State<AddEventPage> {
               ),
               const SizedBox(height: 10),
               TextField(
+                key: const Key('EventDateField'), // For Testing
                 controller: dateController,
                 readOnly: true,
                 onTap: () => _selectDate(context),
@@ -215,6 +220,7 @@ class _AddEventPageState extends State<AddEventPage> {
               ),
               const SizedBox(height: 10),
               TextField(
+                key: const Key('EventTimeField'), // For Testing
                 controller: timeController,
                 readOnly: true,
                 onTap: () => _selectTime(context),
@@ -226,6 +232,7 @@ class _AddEventPageState extends State<AddEventPage> {
               ),
               const SizedBox(height: 10),
               SwitchListTile(
+                key: const Key("PrivateSwitch"), // For Testing
                 title: const Text('Make event private'),
                 value: isPrivate,
                 onChanged: (bool value) {
@@ -245,6 +252,7 @@ class _AddEventPageState extends State<AddEventPage> {
                         borderRadius: BorderRadius.circular(8.0)),
                   ),
                   child: const Text(
+                    key: Key("AddEvent"), // For Testing
                     'Add Event',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                   ),

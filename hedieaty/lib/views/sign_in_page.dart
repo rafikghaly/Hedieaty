@@ -15,7 +15,7 @@ class SignInPage extends StatelessWidget {
 
   final Repository _repository = Repository();
 
-  SignInPage({super.key});
+  SignInPage({super.key= const Key('SignInPageKey')}); // For Testing
 
 
 

@@ -188,7 +188,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 }
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  const MainPage({super.key= const Key('MainPageKey')}); //Key for Testing
 
   @override
   State<MainPage> createState() => _MainPageState();
