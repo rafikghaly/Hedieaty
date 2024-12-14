@@ -1,6 +1,10 @@
 # Miscellaneous
 *.class
 *.log
+#don't ignore those logs
+!integration_test_output.log
+!integration_test_output_on_device.log
+!test_output.log
 *.pyc
 *.swp
 .DS_Store
