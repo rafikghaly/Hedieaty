@@ -78,6 +78,11 @@ void main() {
     // Trigger the Date Picker
     await tester.tap(find.byKey(const Key('EventDateField')));
     await tester.pumpAndSettle();
+    // Navigate to after 3 months by tapping "Next month" 3 times
+    for (int i = 0; i < 3; i++) {
+      await tester.tap(find.byTooltip('Next month'));
+      await tester.pumpAndSettle();
+    }
     await tester.tap(find.text('15')); // Select the 15th day of the month
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
