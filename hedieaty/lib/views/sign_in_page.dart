@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:hedieaty/controllers/repository.dart';
 import '../controllers/theme_notifier.dart';
+import '../models/notification.dart';
 import '../models/user.dart';
 import 'sign_up_page.dart';
 import '../main.dart';
@@ -77,6 +80,24 @@ class SignInPage extends StatelessWidget {
           // Load user preferences
           final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
           themeNotifier.loadUserPreferences(user.id.toString());
+
+          // Get FCM Token
+          final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+          String? token = await _firebaseMessaging.getToken();
+          // print('FCM Token on Login: $token');
+
+          // Update Firestore with the FCM Token
+          QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .where('id', isEqualTo: user.id)
+              .get();
+
+          if (userSnapshot.docs.isNotEmpty) {
+            DocumentReference userDocRef = userSnapshot.docs.first.reference;
+            await userDocRef.set({
+              'fcmToken': token,
+            }, SetOptions(merge: true));
+          }
 
           Navigator.pushReplacement(
             context,

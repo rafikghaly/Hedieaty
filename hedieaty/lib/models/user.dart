@@ -6,6 +6,7 @@ import '../init_database.dart';
 class User {
   final int? id;
   final String firebaseUid;
+  String? fcmToken;
   final String name;
   final String email;
   String preferences;
@@ -17,6 +18,7 @@ class User {
     this.id,
     this.phoneNumber,
     required this.firebaseUid,
+    this.fcmToken,
     required this.name,
     required this.email,
     required this.preferences,
@@ -34,6 +36,7 @@ class User {
       preferences: map['preferences'],
       password: map['password'],
       profileImageBase64: map['profileImageBase64'],
+      fcmToken: map['fcmToken'],
     );
   }
 
@@ -47,6 +50,7 @@ class User {
       'preferences': preferences,
       'password': password,
       'profileImageBase64': profileImageBase64,
+      'fcmToken': fcmToken,
     };
   }
 

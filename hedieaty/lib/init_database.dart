@@ -25,6 +25,7 @@ class DatabaseInitializer {
           'id INTEGER PRIMARY KEY AUTOINCREMENT, '
           'firebase_uid TEXT UNIQUE, '
           'name TEXT, '
+          'fcmToken TEXT, '
           'email TEXT, '
           'phoneNumber TEXT, '
           'preferences TEXT, '

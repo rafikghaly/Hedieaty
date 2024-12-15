@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hedieaty/views/custom_page_transition.dart';
@@ -5,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import 'controllers/theme_notifier.dart';
+import 'models/notification.dart';
 import 'views/sign_in_page.dart';
 import 'views/home_page.dart';
 import 'views/profile_page.dart';
@@ -44,6 +46,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await DatabaseInitializer().database;
+  await NotificationService.initialize();
 
   Workmanager().initialize(
       callbackDispatcher, // Make it top-level function for Exception
@@ -56,8 +59,25 @@ void main() async {
       child: const MyApp(),
     ),
   );
+  // Initialize or refresh FCM token on app start
+  await initializeFCMToken();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 }
 
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  // print('Handling a background message: ${message.messageId}');
+}
+Future<void> initializeFCMToken() async {
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  String? fcmToken = await _firebaseMessaging.getToken();
+  // print('Initial FCM Token: $fcmToken');
+
+  // Listen for token refresh
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+    // print('New Token: $newToken');
+  });
+}
 Future<User?> loadUserFromPrefs() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int? userId = prefs.getInt('userId');
@@ -116,7 +136,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       Workmanager().registerPeriodicTask(
         '1',
         'simplePeriodicTask',
-        frequency: const Duration(minutes: 10), // Sync every 10 minutes
+        frequency: const Duration(days: 10), // Sync every 10 days
         inputData: {'userId': userId},
       );
     }
