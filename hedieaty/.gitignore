@@ -5,6 +5,7 @@
 !integration_test_output.log
 !integration_test_output_on_device.log
 !test_output.log
+!test_output_on_device.log
 *.pyc
 *.swp
 .DS_Store

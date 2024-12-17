@@ -169,6 +169,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
+                  key: const Key('GiftTitleField'), // For testing
                   decoration: InputDecoration(
                     labelText: 'Name',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
@@ -185,6 +186,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
+                  key: const Key('GiftDescriptionField'), // For testing
                   decoration: InputDecoration(
                     labelText: 'Description',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
@@ -230,6 +232,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
+                  key: const Key('GiftPriceField'), // For testing
                   decoration: InputDecoration(
                     labelText: 'Price',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
@@ -252,6 +255,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                 ),
                 const SizedBox(height: 10),
                 TextButton(
+                  key: const Key('GiftUploadImageButton'), // For testing
                   onPressed: _pickAndUploadImage,
                   child: Text(_imageBase64 == null ? 'Upload Image' : 'Change Image'),
                 ),
@@ -265,6 +269,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                 if (!_isLoading)
                   Center(
                     child: ElevatedButton(
+                      key: const Key('SaveGiftButton'), // For testing
                       onPressed: _submitForm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amber[800],

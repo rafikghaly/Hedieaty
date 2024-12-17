@@ -476,6 +476,7 @@ class _GiftListPageState extends State<GiftListPage> {
       ),
       floatingActionButton: widget.isOwner && _event?.status!="Past"
           ? FloatingActionButton(
+              key: const Key('AddGiftButton'), // For Testing
               onPressed: () {
                 if(_event?.status=="Past")
                   {
