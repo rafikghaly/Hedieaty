@@ -2,6 +2,12 @@
 
 Welcome to **Hedieaty**, the ultimate app designed to simplify and enhance the experience of creating, managing, and sharing gift wish lists for any special occasion. Whether it's a birthday, wedding, graduation, or holiday, **Hedieaty** streamlines gift-giving, making it more fun, efficient, and collaborative.
 
+### Version 1.0.0
+- Initial deployment to Amazon Appstore.
+- You can now download the app from the [Amazon Appstore](https://www.amazon.com/dp/B0DQVP9DRT/ref=mp_s_a_1_2?crid=NEN5EDPWOBNS&dib=eyJ2IjoiMSJ9.EcsHMnrnMkIy34TATUPZ1IPa8Jn9WjLxsdd1qsAUYpo.AjDgj62L_j7iCEfPsQ4NpLrdFUx_pKpgxJF9sRVFe2Q&dib_tag=se&keywords=hedietary&qid=1734585084&s=mobile-apps&sprefix=hedieaty%2Caps%2C245&sr=1-2#lookInside).
+
+![Amazon Appstore](https://img.shields.io/badge/Amazon_Appstore-Available-green)
+
 ## Key Features
 
 ### 1. **User-Friendly Interface**
